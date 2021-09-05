@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from vppstats import VPPStats
-import vppapi
+from vppapi import VPPApi
 import time
 import pyagentx
 import logging
@@ -52,8 +52,9 @@ class ifMtu(pyagentx.Updater):
     def update(self):
         global vppstat, vpp
         vppstat.connect()
+        vpp.connect()
 
-        ifaces = vppapi.get_ifaces(vpp)
+        ifaces = vpp.get_ifaces()
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -69,8 +70,9 @@ class ifSpeed(pyagentx.Updater):
     def update(self):
         global vppstat, vpp
         vppstat.connect()
+        vpp.connect()
 
-        ifaces = vppapi.get_ifaces(vpp)
+        ifaces = vpp.get_ifaces()
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -91,8 +93,9 @@ class ifAdminStatus(pyagentx.Updater):
     def update(self):
         global vppstat, vpp
         vppstat.connect()
+        vpp.connect()
 
-        ifaces = vppapi.get_ifaces(vpp)
+        ifaces = vpp.get_ifaces()
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -112,8 +115,9 @@ class ifOperStatus(pyagentx.Updater):
     def update(self):
         global vppstat, vpp
         vppstat.connect()
+        vpp.connect()
 
-        ifaces = vppapi.get_ifaces(vpp)
+        ifaces = vpp.get_ifaces()
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -133,8 +137,9 @@ class ifPhysAddress(pyagentx.Updater):
     def update(self):
         global vppstat, vpp
         vppstat.connect()
+        vpp.connect()
 
-        ifaces = vppapi.get_ifaces(vpp)
+        ifaces = vpp.get_ifaces()
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -280,8 +285,9 @@ class ifHighSpeed(pyagentx.Updater):
     def update(self):
         global vppstat, vpp
         vppstat.connect()
+        vpp.connect()
 
-        ifaces = vppapi.get_ifaces(vpp)
+        ifaces = vpp.get_ifaces()
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -480,8 +486,8 @@ def main():
     vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
     vppstat.connect()
 
-    vpp = vppapi.vpp_connect()
-    if not vpp:
+    vpp = VPPApi()
+    if not vpp.connect():
         logger.error("Can't connect to VPP API, bailing")
         return
 
@@ -495,6 +501,7 @@ def main():
         a.stop()
 
     vppstat.disconnect()
+    vpp.disconnect()
 
 
 if __name__ == "__main__":

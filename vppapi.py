@@ -15,71 +15,79 @@ class NullHandler(logging.Handler):
         pass
 
 
-logger = logging.getLogger('pyagentx.vppapi')
-logger.addHandler(NullHandler())
+class VPPApi():
+    def __init__(self, address='/run/vpp/api.sock'):
+        self.address = address
+        self.lock = threading.Lock()
+        self.connected = False
+        self.logger = logging.getLogger('pyagentx.vppapi')
+        self.logger.addHandler(NullHandler())
+        self.vpp = None
 
-vpp_lock = threading.Lock()
+    def connect(self):
+        self.lock.acquire()
+        if self.connected:
+            self.lock.release()
+            return True
 
+        vpp_json_dir = '/usr/share/vpp/api/'
 
-def vpp_connect():
-    global logger
+        # construct a list of all the json api files
+        jsonfiles = []
+        for root, dirnames, filenames in os.walk(vpp_json_dir):
+            for filename in fnmatch.filter(filenames, '*.api.json'):
+                jsonfiles.append(os.path.join(root, filename))
 
-    vpp_json_dir = '/usr/share/vpp/api/'
+        if not jsonfiles:
+            self.logger.error('no json api files found')
+            self.lock.release()
+            return False
 
-    # construct a list of all the json api files
-    jsonfiles = []
-    for root, dirnames, filenames in os.walk(vpp_json_dir):
-        for filename in fnmatch.filter(filenames, '*.api.json'):
-            jsonfiles.append(os.path.join(root, filename))
+        self.vpp = VPPApiClient(apifiles=jsonfiles,
+                                server_address=self.address)
+        try:
+            self.logger.info('Connecting to VPP')
+            self.vpp.connect('vpp-snmp-agent')
+        except:
+            self.lock.release()
+            return False
 
-    if not jsonfiles:
-        logger.error('no json api files found')
-        return False
+        v = self.vpp.api.show_version()
+        self.logger.info('VPP version is %s' % v.version)
 
-    vpp = VPPApiClient(apifiles=jsonfiles, server_address='/run/vpp/api.sock')
-    try:
-        vpp.connect('vpp-snmp-agent')
-    except:
-        return False
+        self.connected = True
+        self.lock.release()
+        return True
 
-    v = vpp.api.show_version()
-    logger.info('VPP version is %s' % v.version)
+    def disconnect(self):
+        if not self.connected:
+            return True
+        self.vpp.disconnect()
+        self.connected = False
+        return True
 
-    return vpp
+    def get_ifaces(self):
+        ret = {}
+        if not self.connected:
+            return ret
 
+        self.lock.acquire()
+        try:
+            iface_list = self.vpp.api.sw_interface_dump()
+        except Exception as e:
+            self.logger.error("VPP communication error, disconnecting", e)
+            self.vpp.disconnect()
+            self.connected = False
+            self.lock.release()
+            return ret
 
-def get_iface(vpp, ifname):
-    global logger
+        if not iface_list:
+            self.logger.error("Can't get interface list")
+            self.lock.release()
+            return ret
 
-    vpp_lock.acquire()
-    iface_list = vpp.api.sw_interface_dump(name_filter=ifname,
-                                           name_filter_valid=True)
-    if not iface_list:
-        logger.error("Can't get interface %s" % ifname)
-        vpp_lock.release()
-        return None
+        for iface in iface_list:
+            ret[iface.interface_name] = iface
 
-    for iface in iface_list:
-        if iface.interface_name == ifname:
-            vpp_lock.release()
-            return iface
-    vpp_lock.release()
-    return None
-
-
-def get_ifaces(vpp):
-    global logger
-
-    vpp_lock.acquire()
-    ret = {}
-    iface_list = vpp.api.sw_interface_dump()
-    if not iface_list:
-        logger.error("Can't get interface list")
-        vpp_lock.release()
+        self.lock.release()
         return ret
-
-    for iface in iface_list:
-        ret[iface.interface_name] = iface
-
-    vpp_lock.release()
-    return ret

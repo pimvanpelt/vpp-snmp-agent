@@ -167,8 +167,9 @@ class ifInMulticastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat['/if/rx-multicast'][:, i].sum_packets())
+            self.set_COUNTER32(
+                str(i + 1),
+                vppstat['/if/rx-multicast'][:, i].sum_packets() % 2**32)
 
 
 class ifInBroadcastPkts(pyagentx.Updater):
@@ -177,8 +178,9 @@ class ifInBroadcastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat['/if/rx-broadcast'][:, i].sum_packets())
+            self.set_COUNTER32(
+                str(i + 1),
+                vppstat['/if/rx-broadcast'][:, i].sum_packets() % 2**32)
 
 
 class ifOutMulticastPkts(pyagentx.Updater):
@@ -187,8 +189,9 @@ class ifOutMulticastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat['/if/tx-multicast'][:, i].sum_packets())
+            self.set_COUNTER32(
+                str(i + 1),
+                vppstat['/if/tx-multicast'][:, i].sum_packets() % 2**32)
 
 
 class ifOutBroadcastPkts(pyagentx.Updater):
@@ -197,8 +200,9 @@ class ifOutBroadcastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat['/if/tx-broadcast'][:, i].sum_packets())
+            self.set_COUNTER32(
+                str(i + 1),
+                vppstat['/if/tx-broadcast'][:, i].sum_packets() % 2**32)
 
 
 class ifHCInOctets(pyagentx.Updater):
@@ -338,8 +342,8 @@ class ifInOctets(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/rx'][:,
-                                                             i].sum_octets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx'][:, i].sum_octets() % 2**32)
 
 
 class ifInUcastPkts(pyagentx.Updater):
@@ -348,8 +352,8 @@ class ifInUcastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/rx'][:,
-                                                             i].sum_packets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx'][:, i].sum_packets() % 2**32)
 
 
 class ifInNUcastPkts(pyagentx.Updater):
@@ -358,8 +362,9 @@ class ifInNUcastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat['/if/rx-multicast'][:, i].sum_packets())
+            self.set_COUNTER32(
+                str(i + 1),
+                vppstat['/if/rx-multicast'][:, i].sum_packets() % 2**32)
 
 
 class ifInDiscards(pyagentx.Updater):
@@ -368,8 +373,8 @@ class ifInDiscards(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-no-buf'][:,
-                                                                    i].sum())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx-no-buf'][:, i].sum() % 2**32)
 
 
 class ifInErrors(pyagentx.Updater):
@@ -378,7 +383,8 @@ class ifInErrors(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-error'][:, i].sum())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx-error'][:, i].sum() % 2**32)
 
 
 class ifOutOctets(pyagentx.Updater):
@@ -387,8 +393,8 @@ class ifOutOctets(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/tx'][:,
-                                                             i].sum_octets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/tx'][:, i].sum_octets() % 2**32)
 
 
 class ifOutUcastPkts(pyagentx.Updater):
@@ -397,8 +403,8 @@ class ifOutUcastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/tx'][:,
-                                                             i].sum_packets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/tx'][:, i].sum_packets() % 2**32)
 
 
 class ifOutNUcastPkts(pyagentx.Updater):
@@ -407,8 +413,9 @@ class ifOutNUcastPkts(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat['/if/tx-multicast'][:, i].sum_packets())
+            self.set_COUNTER32(
+                str(i + 1),
+                vppstat['/if/tx-multicast'][:, i].sum_packets() % 2**32)
 
 
 class ifOutDiscards(pyagentx.Updater):
@@ -417,7 +424,8 @@ class ifOutDiscards(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/drops'][:, i].sum())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/drops'][:, i].sum() % 2**32)
 
 
 class ifOutErrors(pyagentx.Updater):
@@ -426,7 +434,8 @@ class ifOutErrors(pyagentx.Updater):
         vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/tx-error'][:, i].sum())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/tx-error'][:, i].sum() % 2**32)
 
 
 class MyAgent(pyagentx.Agent):

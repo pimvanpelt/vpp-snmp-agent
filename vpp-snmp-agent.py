@@ -292,12 +292,11 @@ class MyAgent(pyagentx.Agent):
         self.register('1.3.6.1.2.1.31.1.1.1.12', ifHCOutMulticastPkts)
         self.register('1.3.6.1.2.1.31.1.1.1.13', ifHCOutBroadcastPkts)
 
-        self.register('1.3.6.1.2.1.31.1.1.1.14', ifHighSpeed)
-        self.register('1.3.6.1.2.1.31.1.1.1.15', ifPromiscuousMode)
-        self.register('1.3.6.1.2.1.31.1.1.1.16', ifConnectorPresent)
-        self.register('1.3.6.1.2.1.31.1.1.1.18', ifCounterDiscontinuityTime)
-
-        self.register('1.3.6.1.2.1.31.1.1.1.17', ifAlias)
+        self.register('1.3.6.1.2.1.31.1.1.1.15', ifHighSpeed)
+        self.register('1.3.6.1.2.1.31.1.1.1.16', ifPromiscuousMode)
+        self.register('1.3.6.1.2.1.31.1.1.1.17', ifConnectorPresent)
+        self.register('1.3.6.1.2.1.31.1.1.1.18', ifAlias)
+        self.register('1.3.6.1.2.1.31.1.1.1.19', ifCounterDiscontinuityTime)
 
 
 def main():

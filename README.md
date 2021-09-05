@@ -30,7 +30,11 @@ Install `pyinstaller` to build a binary distribution
 ```
 sudo pip install pyinstaller
 pyinstaller vpp-snmp-agent.py  --onefile
+
+## Run it on console
 dist/vpp-snmp-agent
+
+## Install
 sudo mkdir -p /usr/local/sbin/
 sudo cp dist/vpp-snmp-agent /usr/local/sbin/
 ```

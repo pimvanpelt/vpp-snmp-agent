@@ -26,6 +26,18 @@ class ifName(pyagentx.Updater):
             self.set_OCTETSTRING(str(i + 1), vppstat['/if/names'][i])
 
 
+class ifType(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            t = 6  # ethermet-csmacd
+            if vppstat['/if/names'][i].startswith("loop"):
+                t = 24  # softwareLoopback
+            self.set_INTEGER(str(i + 1), t)
+
+
 class ifAlias(pyagentx.Updater):
     def update(self):
         global vppstat
@@ -194,8 +206,130 @@ class ifCounterDiscontinuityTime(pyagentx.Updater):
             self.set_TIMETICKS(str(i + 1), 0)
 
 
+class ifInOctets(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/rx'][:,
+                                                             i].sum_octets())
+
+
+class ifInUcastPkts(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/rx'][:,
+                                                             i].sum_packets())
+
+
+class ifInNUcastPkts(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx-multicast'][:, i].sum_packets())
+
+
+class ifInDiscards(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-no-buf'][:,
+                                                                    i].sum())
+
+
+class ifInErrors(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-error'][:, i].sum())
+
+
+class ifOutOctets(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/tx'][:,
+                                                             i].sum_octets())
+
+
+class ifOutUcastPkts(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/tx'][:,
+                                                             i].sum_packets())
+
+
+class ifOutNUcastPkts(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/tx-multicast'][:, i].sum_packets())
+
+
+class ifOutDiscards(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/drops'][:, i].sum())
+
+
+class ifOutErrors(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/tx-error'][:, i].sum())
+
+
 class MyAgent(pyagentx.Agent):
     def setup(self):
+
+        # iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry
+        self.register('1.3.6.1.2.1.2.2.1.2', ifName)
+        self.register('1.3.6.1.2.1.2.2.1.3', ifType)
+        self.register('1.3.6.1.2.1.2.2.1.9', ifCounterDiscontinuityTime)
+        self.register('1.3.6.1.2.1.2.2.1.10', ifInOctets)
+        self.register('1.3.6.1.2.1.2.2.1.11', ifInUcastPkts)
+        self.register('1.3.6.1.2.1.2.2.1.12', ifInNUcastPkts)
+        self.register('1.3.6.1.2.1.2.2.1.13', ifInDiscards)
+        self.register('1.3.6.1.2.1.2.2.1.14', ifInErrors)
+
+        self.register('1.3.6.1.2.1.2.2.1.16', ifOutOctets)
+        self.register('1.3.6.1.2.1.2.2.1.17', ifOutUcastPkts)
+        self.register('1.3.6.1.2.1.2.2.1.18', ifOutNUcastPkts)
+        self.register('1.3.6.1.2.1.2.2.1.19', ifOutDiscards)
+        self.register('1.3.6.1.2.1.2.2.1.20', ifOutErrors)
+
+        # TODO(pim) -- these require VPP API calls
+        #4 .iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry.ifMtu.132 = INTEGER: 1500
+        #5 .iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry.ifSpeed.132 = Gauge32: 10000000
+        #6 .iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry.ifPhysAddress.132 = Hex-STRING: 68 05 CA 32 46 15
+        #7 .iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry.ifAdminStatus.132 = INTEGER: 1
+        #8 .iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry.ifOperStatus.132 = INTEGER: 1
+
+        # iso.org.dod.internet.mgmt.mib_2.ifMIB.ifMIBObjects.ifXTable.ifXEntry
         self.register('1.3.6.1.2.1.31.1.1.1.1', ifName)
         self.register('1.3.6.1.2.1.31.1.1.1.2', ifInMulticastPkts)
         self.register('1.3.6.1.2.1.31.1.1.1.3', ifInBroadcastPkts)
@@ -222,7 +356,7 @@ class MyAgent(pyagentx.Agent):
 def main():
     global vppstat
 
-    pyagentx.setup_logging()
+    pyagentx.setup_logging(debug=False)
 
     vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
     vppstat.connect()

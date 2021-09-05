@@ -26,6 +26,15 @@ class ifName(pyagentx.Updater):
             self.set_OCTETSTRING(str(i + 1), vppstat['/if/names'][i])
 
 
+class ifIndex(pyagentx.Updater):
+    def update(self):
+        global vppstat
+        vppstat.connect()
+
+        for i in range(len(vppstat['/if/names'])):
+            self.set_INTEGER(str(i + 1), i + 1)
+
+
 class ifType(pyagentx.Updater):
     def update(self):
         global vppstat
@@ -307,6 +316,7 @@ class MyAgent(pyagentx.Agent):
     def setup(self):
 
         # iso.org.dod.internet.mgmt.mib_2.interfaces.ifTable.ifEntry
+        self.register('1.3.6.1.2.1.2.2.1.1', ifIndex)
         self.register('1.3.6.1.2.1.2.2.1.2', ifName)
         self.register('1.3.6.1.2.1.2.2.1.3', ifType)
         self.register('1.3.6.1.2.1.2.2.1.9', ifCounterDiscontinuityTime)

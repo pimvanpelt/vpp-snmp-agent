@@ -68,7 +68,7 @@ class Agent(object):
         pass
 
     def start(self):
-        update_queue = queue.Queue(maxsize=20)
+        update_queue = queue.Queue(maxsize=20000) # 1000 interfaces, 20 variables each
         self.setup()
         # Start Updaters
         for u in self._updater_list:

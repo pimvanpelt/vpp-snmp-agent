@@ -7,23 +7,6 @@ import pyagentx
 import logging
 import threading
 
-vppstat_lastread = 0
-vppstat_ifstat = {
-    'ifNames': [],
-    'ifHCInOctets': [],
-    'ifHCInUcastPkts': [],
-    'ifHCInMulticastPkts': [],
-    'ifHCInBroadcastPkts': [],
-    'ifHCOutOctets': [],
-    'ifHCOutUcastPkts': [],
-    'ifHCOutMulticastPkts': [],
-    'ifHCOutBroadcastPkts': [],
-    'ifHighSpeed': []
-}
-
-vppstat_lock = threading.Lock()
-
-
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
@@ -32,245 +15,149 @@ class NullHandler(logging.Handler):
 logger = logging.getLogger('pyagentx.vpp')
 logger.addHandler(NullHandler())
 
-
-def vppstat_update():
-    global vppstat_lastread, vppstat_lock, vppstat_ifstat, logger
-
-    vppstat_lock.acquire()
-    try:
-        if time.time() - vppstat_lastread < 9.0:
-            logger.debug("Skipping, cache still fresh")
-            vppstat_lock.release()
-            return
-
-        logger.info("Fetching interface data from VPP")
-        vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
-        vppstat.connect()
-        vppstat_ifstat['ifNames'].clear()
-        vppstat_ifstat['ifHCInOctets'].clear()
-        vppstat_ifstat['ifHCInUcastPkts'].clear()
-        vppstat_ifstat['ifHCInMulticastPkts'].clear()
-        vppstat_ifstat['ifHCInBroadcastPkts'].clear()
-        vppstat_ifstat['ifHCOutOctets'].clear()
-        vppstat_ifstat['ifHCOutUcastPkts'].clear()
-        vppstat_ifstat['ifHCOutMulticastPkts'].clear()
-        vppstat_ifstat['ifHCOutBroadcastPkts'].clear()
-        vppstat_ifstat['ifHighSpeed'].clear()
-
-        vppstat_ifstat['ifNames'] = vppstat['/if/names']
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            vppstat_ifstat['ifHCInOctets'].append(
-                vppstat['/if/rx'][:, i].sum_octets())
-            vppstat_ifstat['ifHCInUcastPkts'].append(
-                vppstat['/if/rx'][:, i].sum_packets())
-            vppstat_ifstat['ifHCInMulticastPkts'].append(
-                vppstat['/if/rx-multicast'][:, i].sum_packets())
-            vppstat_ifstat['ifHCInBroadcastPkts'].append(
-                vppstat['/if/rx-broadcast'][:, i].sum_packets())
-
-            vppstat_ifstat['ifHCOutOctets'].append(
-                vppstat['/if/tx'][:, i].sum_octets())
-            vppstat_ifstat['ifHCOutUcastPkts'].append(
-                vppstat['/if/tx'][:, i].sum_packets())
-            vppstat_ifstat['ifHCOutMulticastPkts'].append(
-                vppstat['/if/tx-multicast'][:, i].sum_packets())
-            vppstat_ifstat['ifHCOutBroadcastPkts'].append(
-                vppstat['/if/tx-broadcast'][:, i].sum_packets())
-
-            # TODO(pim) retrieve from vpp_papi
-            # IF-MIB::ifHighSpeed.2 = Gauge32: 1000
-            vppstat_ifstat['ifHighSpeed'].append(1000)
-
-
-# TODO(pim) retrieve from linux namespace if present
-# IF-MIB::ifAlias.2 = STRING: Infra: nikhef-core-1.nl.switch.coloclue.net e1/34
-
-# Initializing these to defaults:
-# IF-MIB::ifPromiscuousMode.2 = INTEGER: false(2)
-# IF-MIB::ifConnectorPresent.2 = INTEGER: true(1)
-# IF-MIB::ifCounterDiscontinuityTime.2 = Timeticks: (0) 0:00:00.00
-
-        logger.info("Fetched data for %u interfaces" %
-                    len(vppstat_ifstat['ifNames']))
-        vppstat_lastread = time.time()
-        vppstat.disconnect()
-    except Exception as e:
-        logger.error("Error occured, releasing lock: ", e)
-    vppstat_lock.release()
-    return
-
-
 class ifName(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_OCTETSTRING(str(i + 1), vppstat_ifstat['ifNames'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_OCTETSTRING(str(i + 1), vppstat['/if/names'][i])
 
 
 class ifAlias(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_OCTETSTRING(str(i + 1), vppstat_ifstat['ifNames'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_OCTETSTRING(str(i + 1), vppstat['/if/names'][i])
 
 
 class ifInMulticastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat_ifstat['ifHCInMulticastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-multicast'][:, i].sum_packets())
 
 
 class ifInBroadcastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat_ifstat['ifHCInBroadcastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-broadcast'][:, i].sum_packets())
 
 
 class ifOutMulticastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat_ifstat['ifHCOutMulticastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/tx-multicast'][:, i].sum_packets())
 
 
 class ifOutBroadcastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER32(str(i + 1),
-                               vppstat_ifstat['ifHCOutBroadcastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER32(str(i + 1), vppstat['/if/tx-broadcast'][:, i].sum_packets())
 
 
 class ifHCInOctets(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1), vppstat_ifstat['ifHCInOctets'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:, i].sum_octets())
 
 
 class ifHCInUcastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1),
-                               vppstat_ifstat['ifHCInUcastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:, i].sum_packets())
 
 
 class ifHCInMulticastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1),
-                               vppstat_ifstat['ifHCInMulticastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/rx-multicast'][:, i].sum_packets())
 
 
 class ifHCInBroadcastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1),
-                               vppstat_ifstat['ifHCInBroadcastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/rx-broadcast'][:, i].sum_packets())
 
 
 class ifHCOutOctets(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1), vppstat_ifstat['ifHCOutOctets'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:, i].sum_octets())
 
 
 class ifHCOutUcastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1),
-                               vppstat_ifstat['ifHCOutUcastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:, i].sum_packets())
 
 
 class ifHCOutMulticastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1),
-                               vppstat_ifstat['ifHCOutMulticastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/tx-multicast'][:, i].sum_packets())
 
 
 class ifHCOutBroadcastPkts(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_COUNTER64(str(i + 1),
-                               vppstat_ifstat['ifHCOutBroadcastPkts'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_COUNTER64(str(i + 1), vppstat['/if/tx-broadcast'][:, i].sum_packets())
 
 
 class ifHighSpeed(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
-            self.set_GAUGE32(str(i + 1), vppstat_ifstat['ifHighSpeed'][i])
+        for i in range(len(vppstat['/if/names'])):
+            self.set_GAUGE32(str(i + 1), 1000)
 
 
 class ifPromiscuousMode(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
+        for i in range(len(vppstat['/if/names'])):
             # Hardcode to false(2)
             self.set_INTEGER(str(i + 1), 2)
 
 
 class ifConnectorPresent(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
+        for i in range(len(vppstat['/if/names'])):
             # Hardcode to true(1)
             self.set_INTEGER(str(i + 1), 1)
 
 
 class ifCounterDiscontinuityTime(pyagentx.Updater):
     def update(self):
-        global vppstat_ifstat
+        global vppstat
 
-        vppstat_update()
-        for i in range(len(vppstat_ifstat['ifNames'])):
+        for i in range(len(vppstat['/if/names'])):
             # Hardcode to Timeticks: (0) 0:00:00.00
             self.set_TIMETICKS(str(i + 1), 0)
 
@@ -301,7 +188,12 @@ class MyAgent(pyagentx.Agent):
 
 
 def main():
+    global vppstat
+
     pyagentx.setup_logging()
+
+    vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
+    vppstat.connect()
 
     try:
         a = MyAgent()
@@ -312,6 +204,7 @@ def main():
     except KeyboardInterrupt:
         a.stop()
 
+    vppstat.disconnect()
 
 if __name__ == "__main__":
     main()

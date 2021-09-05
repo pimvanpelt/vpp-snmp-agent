@@ -46,7 +46,7 @@ def vppstat_update():
         logger.info("Fetching interface data from VPP")
         vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
         vppstat.connect()
-        vppstat_ifstat['ifNames'] = vppstat['/if/names']
+        vppstat_ifstat['ifNames'].clear()
         vppstat_ifstat['ifHCInOctets'].clear()
         vppstat_ifstat['ifHCInUcastPkts'].clear()
         vppstat_ifstat['ifHCInMulticastPkts'].clear()
@@ -57,6 +57,7 @@ def vppstat_update():
         vppstat_ifstat['ifHCOutBroadcastPkts'].clear()
         vppstat_ifstat['ifHighSpeed'].clear()
 
+        vppstat_ifstat['ifNames'] = vppstat['/if/names']
         for i in range(len(vppstat_ifstat['ifNames'])):
             vppstat_ifstat['ifHCInOctets'].append(
                 vppstat['/if/rx'][:, i].sum_octets())

@@ -5,7 +5,7 @@ ConditionPathExists=/etc/snmp/snmpd.conf
 
 [Service]
 Type=simple
-ExecStart=/sbin/ip netns exec dataplane runuser -u Debian-snmp -- /usr/local/sbin/vpp-snmp-agent
+ExecStart=/sbin/ip netns exec dataplane /usr/local/sbin/vpp-snmp-agent
 Group=vpp
 ExecReload=/bin/kill -HUP $MAINPID
 

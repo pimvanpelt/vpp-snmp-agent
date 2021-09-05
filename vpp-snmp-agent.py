@@ -7,6 +7,7 @@ import pyagentx
 import logging
 import threading
 
+
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
@@ -14,6 +15,7 @@ class NullHandler(logging.Handler):
 
 logger = logging.getLogger('pyagentx.vpp')
 logger.addHandler(NullHandler())
+
 
 class ifName(pyagentx.Updater):
     def update(self):
@@ -36,7 +38,8 @@ class ifInMulticastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-multicast'][:, i].sum_packets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx-multicast'][:, i].sum_packets())
 
 
 class ifInBroadcastPkts(pyagentx.Updater):
@@ -44,7 +47,8 @@ class ifInBroadcastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/rx-broadcast'][:, i].sum_packets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/rx-broadcast'][:, i].sum_packets())
 
 
 class ifOutMulticastPkts(pyagentx.Updater):
@@ -52,7 +56,8 @@ class ifOutMulticastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/tx-multicast'][:, i].sum_packets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/tx-multicast'][:, i].sum_packets())
 
 
 class ifOutBroadcastPkts(pyagentx.Updater):
@@ -60,7 +65,8 @@ class ifOutBroadcastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER32(str(i + 1), vppstat['/if/tx-broadcast'][:, i].sum_packets())
+            self.set_COUNTER32(str(i + 1),
+                               vppstat['/if/tx-broadcast'][:, i].sum_packets())
 
 
 class ifHCInOctets(pyagentx.Updater):
@@ -68,7 +74,8 @@ class ifHCInOctets(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:, i].sum_octets())
+            self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:,
+                                                             i].sum_octets())
 
 
 class ifHCInUcastPkts(pyagentx.Updater):
@@ -76,7 +83,8 @@ class ifHCInUcastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:, i].sum_packets())
+            self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:,
+                                                             i].sum_packets())
 
 
 class ifHCInMulticastPkts(pyagentx.Updater):
@@ -84,7 +92,8 @@ class ifHCInMulticastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/rx-multicast'][:, i].sum_packets())
+            self.set_COUNTER64(str(i + 1),
+                               vppstat['/if/rx-multicast'][:, i].sum_packets())
 
 
 class ifHCInBroadcastPkts(pyagentx.Updater):
@@ -92,7 +101,8 @@ class ifHCInBroadcastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/rx-broadcast'][:, i].sum_packets())
+            self.set_COUNTER64(str(i + 1),
+                               vppstat['/if/rx-broadcast'][:, i].sum_packets())
 
 
 class ifHCOutOctets(pyagentx.Updater):
@@ -100,7 +110,8 @@ class ifHCOutOctets(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:, i].sum_octets())
+            self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:,
+                                                             i].sum_octets())
 
 
 class ifHCOutUcastPkts(pyagentx.Updater):
@@ -108,7 +119,8 @@ class ifHCOutUcastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:, i].sum_packets())
+            self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:,
+                                                             i].sum_packets())
 
 
 class ifHCOutMulticastPkts(pyagentx.Updater):
@@ -116,7 +128,8 @@ class ifHCOutMulticastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/tx-multicast'][:, i].sum_packets())
+            self.set_COUNTER64(str(i + 1),
+                               vppstat['/if/tx-multicast'][:, i].sum_packets())
 
 
 class ifHCOutBroadcastPkts(pyagentx.Updater):
@@ -124,7 +137,8 @@ class ifHCOutBroadcastPkts(pyagentx.Updater):
         global vppstat
 
         for i in range(len(vppstat['/if/names'])):
-            self.set_COUNTER64(str(i + 1), vppstat['/if/tx-broadcast'][:, i].sum_packets())
+            self.set_COUNTER64(str(i + 1),
+                               vppstat['/if/tx-broadcast'][:, i].sum_packets())
 
 
 class ifHighSpeed(pyagentx.Updater):
@@ -205,6 +219,7 @@ def main():
         a.stop()
 
     vppstat.disconnect()
+
 
 if __name__ == "__main__":
     main()

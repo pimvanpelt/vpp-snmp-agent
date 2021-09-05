@@ -1,0 +1,13 @@
+[Unit]
+Description=Simple Network Management Protocol (SNMP) Daemon.
+After=network.target
+ConditionPathExists=/etc/snmp/snmpd.conf
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /var/run/agentx-dataplane/
+ExecStart=/sbin/ip netns exec dataplane /usr/sbin/snmpd -LOw -u Debian-snmp -g vpp -I -smux,mteTrigger,mteTriggerConf -f -p /run/snmpd-dataplane.pid
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

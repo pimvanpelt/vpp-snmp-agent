@@ -20,6 +20,7 @@ logger.addHandler(NullHandler())
 class ifName(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_OCTETSTRING(str(i + 1), vppstat['/if/names'][i])
@@ -28,6 +29,7 @@ class ifName(pyagentx.Updater):
 class ifAlias(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_OCTETSTRING(str(i + 1), vppstat['/if/names'][i])
@@ -36,6 +38,7 @@ class ifAlias(pyagentx.Updater):
 class ifInMulticastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER32(str(i + 1),
@@ -45,6 +48,7 @@ class ifInMulticastPkts(pyagentx.Updater):
 class ifInBroadcastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER32(str(i + 1),
@@ -54,6 +58,7 @@ class ifInBroadcastPkts(pyagentx.Updater):
 class ifOutMulticastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER32(str(i + 1),
@@ -63,6 +68,7 @@ class ifOutMulticastPkts(pyagentx.Updater):
 class ifOutBroadcastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER32(str(i + 1),
@@ -72,6 +78,7 @@ class ifOutBroadcastPkts(pyagentx.Updater):
 class ifHCInOctets(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:,
@@ -81,6 +88,7 @@ class ifHCInOctets(pyagentx.Updater):
 class ifHCInUcastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1), vppstat['/if/rx'][:,
@@ -90,6 +98,7 @@ class ifHCInUcastPkts(pyagentx.Updater):
 class ifHCInMulticastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1),
@@ -99,6 +108,7 @@ class ifHCInMulticastPkts(pyagentx.Updater):
 class ifHCInBroadcastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1),
@@ -108,6 +118,7 @@ class ifHCInBroadcastPkts(pyagentx.Updater):
 class ifHCOutOctets(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:,
@@ -117,6 +128,7 @@ class ifHCOutOctets(pyagentx.Updater):
 class ifHCOutUcastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1), vppstat['/if/tx'][:,
@@ -126,6 +138,7 @@ class ifHCOutUcastPkts(pyagentx.Updater):
 class ifHCOutMulticastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1),
@@ -135,6 +148,7 @@ class ifHCOutMulticastPkts(pyagentx.Updater):
 class ifHCOutBroadcastPkts(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_COUNTER64(str(i + 1),
@@ -144,6 +158,7 @@ class ifHCOutBroadcastPkts(pyagentx.Updater):
 class ifHighSpeed(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             self.set_GAUGE32(str(i + 1), 1000)
@@ -152,6 +167,7 @@ class ifHighSpeed(pyagentx.Updater):
 class ifPromiscuousMode(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             # Hardcode to false(2)
@@ -161,6 +177,7 @@ class ifPromiscuousMode(pyagentx.Updater):
 class ifConnectorPresent(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             # Hardcode to true(1)
@@ -170,6 +187,7 @@ class ifConnectorPresent(pyagentx.Updater):
 class ifCounterDiscontinuityTime(pyagentx.Updater):
     def update(self):
         global vppstat
+        vppstat.connect()
 
         for i in range(len(vppstat['/if/names'])):
             # Hardcode to Timeticks: (0) 0:00:00.00

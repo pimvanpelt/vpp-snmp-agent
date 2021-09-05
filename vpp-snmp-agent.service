@@ -8,6 +8,8 @@ Type=simple
 ExecStart=/sbin/ip netns exec dataplane /usr/local/sbin/vpp-snmp-agent
 Group=vpp
 ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target

@@ -6,7 +6,8 @@ ConditionPathExists=/etc/snmp/snmpd.conf
 [Service]
 Type=simple
 ExecStartPre=/bin/mkdir -p /var/run/agentx-dataplane/
-ExecStart=/sbin/ip netns exec dataplane /usr/sbin/snmpd -LOw -u Debian-snmp -g vpp -I -smux,mteTrigger,mteTriggerConf -f -p /run/snmpd-dataplane.pid
+NetworkNamespacePath=/var/run/netns/dataplane
+ExecStart=/usr/sbin/snmpd -LOw -u Debian-snmp -g vpp -I -smux,mteTrigger,mteTriggerConf -f -p /run/snmpd-dataplane.pid
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

@@ -29,8 +29,6 @@ def setup_logging(debug=False):
     logger.addHandler(ch)
 
 
-SOCKET_PATH = "/var/agentx/master"
-
 AGENTX_EMPTY_PDU = 1
 AGENTX_OPEN_PDU = 1
 AGENTX_CLOSE_PDU = 2

@@ -32,12 +32,13 @@ from pyagentx.pdu import PDU
 
 
 class Network(threading.Thread):
-    def __init__(self, update_queue, oid_list, sethandlers):
+    def __init__(self, update_queue, oid_list, sethandlers, server_address):
         threading.Thread.__init__(self)
         self.stop = threading.Event()
         self._queue = update_queue
         self._oid_list = oid_list
         self._sethandlers = sethandlers
+        self._server_address = server_address
 
         self.session_id = 0
         self.transaction_id = 0
@@ -49,10 +50,13 @@ class Network(threading.Thread):
     def _connect(self):
         while True:
             try:
-#                self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-#                self.socket.connect(pyagentx.SOCKET_PATH)
-                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.socket.connect(("localhost",705))
+                logger.info("Connecting to %s", self._server_address)
+                if self._server_address.startswith('/'):
+                    self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    self.socket.connect(self._server_address)
+                else:
+                    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.socket.connect(self._server_address.split(':'))
                 self.socket.settimeout(0.1)
                 return
             except socket.error:

@@ -501,7 +501,7 @@ def main():
         return
 
     try:
-        a = MyAgent()
+        a = MyAgent(server_address='/run/vpp/agentx.sock')
         a.start()
     except Exception as e:
         print("Unhandled exception:", e)

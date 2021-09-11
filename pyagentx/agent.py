@@ -36,10 +36,11 @@ class AgentError(Exception):
 
 
 class Agent(object):
-    def __init__(self):
+    def __init__(self, server_address='/var/agentx/master'):
         self._updater_list = []
         self._sethandlers = {}
         self._threads = []
+        self._server_address = server_address
 
     def register(self, oid, class_, freq=10):
         if Updater not in inspect.getmro(class_):
@@ -79,7 +80,7 @@ class Agent(object):
             self._threads.append(t)
         # Start Network
         oid_list = [u['oid'] for u in self._updater_list]
-        t = Network(update_queue, oid_list, self._sethandlers)
+        t = Network(update_queue, oid_list, self._sethandlers, self._server_address)
         t.start()
         self._threads.append(t)
         # Do nothing ... just wait for someone to stop you

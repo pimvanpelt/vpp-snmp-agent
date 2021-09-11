@@ -110,9 +110,12 @@ class VPPStats():
     def connect(self):
         '''Connect to stats segment'''
         if self.connected:
-            return
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-        sock.connect(self.socketname)
+            return True
+        try:
+          sock = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+          sock.connect(self.socketname)
+        except:
+            return False
 
         # Get file descriptor for memory map
         fds = array.array("i")  # Array of ints
@@ -133,9 +136,11 @@ class VPPStats():
         if self.version != 2:
             raise Exception('Incompatbile stat segment version {}'.format(
                 self.version))
+            return False
 
         self.refresh()
         self.connected = True
+        return True
 
     def disconnect(self):
         '''Disconnect from stats segment'''

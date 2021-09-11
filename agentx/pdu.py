@@ -15,14 +15,14 @@ class NullHandler(logging.Handler):
         pass
 
 
-logger = logging.getLogger('pyagentx.pdu')
+logger = logging.getLogger('agentx.pdu')
 logger.addHandler(NullHandler())
 # --------------------------------------------
 
 import struct
 import pprint
 
-import pyagentx
+import agentx
 
 
 class PDU(object):
@@ -31,14 +31,14 @@ class PDU(object):
         self.session_id = 0
         self.transaction_id = 0
         self.packet_id = 0
-        self.error = pyagentx.ERROR_NOAGENTXERROR
+        self.error = agentx.ERROR_NOAGENTXERROR
         self.error_index = 0
         self.decode_buf = ''
         self.state = {}
         self.values = []
 
     def dump(self):
-        name = pyagentx.PDU_TYPE_NAME[self.type]
+        name = agentx.PDU_TYPE_NAME[self.type]
         logger.debug('PDU DUMP: New PDU')
         logger.debug(
             'PDU DUMP: Meta      : [%s: %d %d %d]' %
@@ -85,25 +85,25 @@ class PDU(object):
     def encode_value(self, type, name, value):
         buf = struct.pack('!HH', type, 0)
         buf += self.encode_oid(name)
-        if type in [pyagentx.TYPE_INTEGER]:
+        if type in [agentx.TYPE_INTEGER]:
             buf += struct.pack('!l', value)
         elif type in [
-                pyagentx.TYPE_COUNTER32, pyagentx.TYPE_GAUGE32,
-                pyagentx.TYPE_TIMETICKS
+                agentx.TYPE_COUNTER32, agentx.TYPE_GAUGE32,
+                agentx.TYPE_TIMETICKS
         ]:
             buf += struct.pack('!L', value)
-        elif type in [pyagentx.TYPE_COUNTER64]:
+        elif type in [agentx.TYPE_COUNTER64]:
             buf += struct.pack('!Q', value)
-        elif type in [pyagentx.TYPE_OBJECTIDENTIFIER]:
+        elif type in [agentx.TYPE_OBJECTIDENTIFIER]:
             buf += self.encode_oid(value)
         elif type in [
-                pyagentx.TYPE_IPADDRESS, pyagentx.TYPE_OPAQUE,
-                pyagentx.TYPE_OCTETSTRING
+                agentx.TYPE_IPADDRESS, agentx.TYPE_OPAQUE,
+                agentx.TYPE_OCTETSTRING
         ]:
             buf += self.encode_octet(value)
         elif type in [
-                pyagentx.TYPE_NULL, pyagentx.TYPE_NOSUCHOBJECT,
-                pyagentx.TYPE_NOSUCHINSTANCE, pyagentx.TYPE_ENDOFMIBVIEW
+                agentx.TYPE_NULL, agentx.TYPE_NOSUCHOBJECT,
+                agentx.TYPE_NOSUCHINSTANCE, agentx.TYPE_ENDOFMIBVIEW
         ]:
             # No data
             pass
@@ -122,7 +122,7 @@ class PDU(object):
 
     def encode(self):
         buf = b''
-        if self.type == pyagentx.AGENTX_OPEN_PDU:
+        if self.type == agentx.AGENTX_OPEN_PDU:
             # timeout
             buf += struct.pack('!BBBB', 5, 0, 0, 0)
             # agent OID
@@ -130,11 +130,11 @@ class PDU(object):
             # Agent Desc
             buf += self.encode_octet('MyAgent')
 
-        elif self.type == pyagentx.AGENTX_PING_PDU:
+        elif self.type == agentx.AGENTX_PING_PDU:
             # No extra data
             pass
 
-        elif self.type == pyagentx.AGENTX_REGISTER_PDU:
+        elif self.type == agentx.AGENTX_REGISTER_PDU:
             range_subid = 0
             timeout = 5
             priority = 127
@@ -142,7 +142,7 @@ class PDU(object):
             # Sub Tree
             buf += self.encode_oid(self.oid)
 
-        elif self.type == pyagentx.AGENTX_RESPONSE_PDU:
+        elif self.type == agentx.AGENTX_RESPONSE_PDU:
             buf += struct.pack('!LHH', 0, self.error, self.error_index)
             for value in self.values:
                 buf += self.encode_value(value['type'], value['name'],
@@ -217,26 +217,26 @@ class PDU(object):
             logger.exception('Invalid packing value header')
         oid, _ = self.decode_oid()
         if vtype in [
-                pyagentx.TYPE_INTEGER, pyagentx.TYPE_COUNTER32,
-                pyagentx.TYPE_GAUGE32, pyagentx.TYPE_TIMETICKS
+                agentx.TYPE_INTEGER, agentx.TYPE_COUNTER32,
+                agentx.TYPE_GAUGE32, agentx.TYPE_TIMETICKS
         ]:
             data = struct.unpack('!L', self.decode_buf[:4])
             data = data[0]
             self.decode_buf = self.decode_buf[4:]
-        elif vtype in [pyagentx.TYPE_COUNTER64]:
+        elif vtype in [agentx.TYPE_COUNTER64]:
             data = struct.unpack('!Q', self.decode_buf[:8])
             data = data[0]
             self.decode_buf = self.decode_buf[8:]
-        elif vtype in [pyagentx.TYPE_OBJECTIDENTIFIER]:
+        elif vtype in [agentx.TYPE_OBJECTIDENTIFIER]:
             data, _ = self.decode_oid()
         elif vtype in [
-                pyagentx.TYPE_IPADDRESS, pyagentx.TYPE_OPAQUE,
-                pyagentx.TYPE_OCTETSTRING
+                agentx.TYPE_IPADDRESS, agentx.TYPE_OPAQUE,
+                agentx.TYPE_OCTETSTRING
         ]:
             data = self.decode_octet()
         elif vtype in [
-                pyagentx.TYPE_NULL, pyagentx.TYPE_NOSUCHOBJECT,
-                pyagentx.TYPE_NOSUCHINSTANCE, pyagentx.TYPE_ENDOFMIBVIEW
+                agentx.TYPE_NULL, agentx.TYPE_NOSUCHOBJECT,
+                agentx.TYPE_NOSUCHINSTANCE, agentx.TYPE_ENDOFMIBVIEW
         ]:
             # No data
             data = None
@@ -251,7 +251,7 @@ class PDU(object):
             ret = {
                 'version': t[0],
                 'pdu_type': t[1],
-                'pdu_type_name': pyagentx.PDU_TYPE_NAME[t[1]],
+                'pdu_type_name': agentx.PDU_TYPE_NAME[t[1]],
                 'flags': t[2],
                 'reserved': t[3],
                 'session_id': t[4],
@@ -276,14 +276,14 @@ class PDU(object):
     def decode(self, buf):
         self.set_decode_buf(buf)
         ret = self.decode_header()
-        if ret['pdu_type'] == pyagentx.AGENTX_RESPONSE_PDU:
+        if ret['pdu_type'] == agentx.AGENTX_RESPONSE_PDU:
             # Decode Response Header
             t = struct.unpack('!LHH', self.decode_buf[:8])
             self.decode_buf = self.decode_buf[8:]
             self.response = {
                 'sysUpTime': t[0],
                 'error': t[1],
-                'error_name': pyagentx.ERROR_NAMES[t[1]],
+                'error_name': agentx.ERROR_NAMES[t[1]],
                 'index': t[2],
             }
             # Decode VarBindList
@@ -291,23 +291,23 @@ class PDU(object):
             while len(self.decode_buf):
                 self.values.append(self.decode_value())
 
-        elif ret['pdu_type'] == pyagentx.AGENTX_GET_PDU:
+        elif ret['pdu_type'] == agentx.AGENTX_GET_PDU:
             self.range_list = self.decode_search_range_list()
 
-        elif ret['pdu_type'] == pyagentx.AGENTX_GETNEXT_PDU:
+        elif ret['pdu_type'] == agentx.AGENTX_GETNEXT_PDU:
             self.range_list = self.decode_search_range_list()
 
-        elif ret['pdu_type'] == pyagentx.AGENTX_TESTSET_PDU:
+        elif ret['pdu_type'] == agentx.AGENTX_TESTSET_PDU:
             # Decode VarBindList
             self.values = []
             while len(self.decode_buf):
                 self.values.append(self.decode_value())
         elif ret['pdu_type'] in [
-                pyagentx.AGENTX_COMMITSET_PDU, pyagentx.AGENTX_UNDOSET_PDU,
-                pyagentx.AGENTX_CLEANUPSET_PDU
+                agentx.AGENTX_COMMITSET_PDU, agentx.AGENTX_UNDOSET_PDU,
+                agentx.AGENTX_CLEANUPSET_PDU
         ]:
             pass
         else:
-            pdu_type_str = pyagentx.PDU_TYPE_NAME.get(
+            pdu_type_str = agentx.PDU_TYPE_NAME.get(
                 ret['pdu_type'], 'Unknown:' + str(ret['pdu_type']))
             logger.error('Unsupported PDU type:' + pdu_type_str)

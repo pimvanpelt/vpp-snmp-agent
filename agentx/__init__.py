@@ -8,26 +8,21 @@ from __future__ import (
 
 import logging
 
-from pyagentx.updater import Updater
-from pyagentx.agent import Agent
-from pyagentx.sethandler import SetHandler, SetHandlerError
-
+from agentx.agent import Agent
+from agentx.dataset import DataSet
 
 def setup_logging(debug=False):
     if debug:
         level = logging.DEBUG
     else:
         level = logging.INFO
-    logger = logging.getLogger('pyagentx')
+    logger = logging.getLogger('agentx')
     logger.setLevel(level)
-    #    formatter = logging.Formatter('%(asctime)s - %(name)20s - %(levelname)s - %(message)s')
-    formatter = logging.Formatter(
-        '[%(levelname)-8s] %(name)17s - %(funcName)-15s: %(message)s')
+    formatter = logging.Formatter('[%(levelname)-8s] %(name)17s - %(funcName)-15s: %(message)s')
     ch = logging.StreamHandler()
     ch.setLevel(level)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-
 
 AGENTX_EMPTY_PDU = 1
 AGENTX_OPEN_PDU = 1

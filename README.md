@@ -35,8 +35,7 @@ pyinstaller vpp-snmp-agent.py  --onefile
 dist/vpp-snmp-agent
 
 ## Install
-sudo mkdir -p /usr/local/sbin/
-sudo cp dist/vpp-snmp-agent /usr/local/sbin/
+sudo cp dist/vpp-snmp-agent /usr/sbin/
 ```
 
 ## Running in production

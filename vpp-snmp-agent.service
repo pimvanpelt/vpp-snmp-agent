@@ -6,7 +6,7 @@ ConditionPathExists=/etc/snmp/snmpd.conf
 [Service]
 Type=simple
 NetworkNamespacePath=/var/run/netns/dataplane
-ExecStart=/usr/local/sbin/vpp-snmp-agent
+ExecStart=/usr/sbin/vpp-snmp-agent
 Group=vpp
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure

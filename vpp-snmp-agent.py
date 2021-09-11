@@ -141,7 +141,7 @@ def main():
     agentx.setup_logging(debug=False)
 
     try:
-        a = MyAgent(server_address='/run/vpp/agentx.sock')
+        a = MyAgent(server_address='localhost:705', period=30)
         a.run()
     except Exception as e:
         print("Unhandled exception:", e)

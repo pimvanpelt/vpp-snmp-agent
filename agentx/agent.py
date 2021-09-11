@@ -25,14 +25,14 @@ class AgentError(Exception):
 
 
 class Agent(object):
-    def __init__(self, server_address='/var/agentx/master', freq=5):
+    def __init__(self, server_address='/var/agentx/master', period=30.0):
         self.logger = logging.getLogger('agentx.agent')
         self.logger.addHandler(NullHandler())
 
         self._servingset = DataSet()
         self._workingset = DataSet()
         self._lastupdate = 0
-        self._update_freq = freq
+        self._update_period = period  # Seconds
 
         self._net = Network(server_address = server_address)
 
@@ -55,14 +55,17 @@ class Agent(object):
               self.logger.info('Opening AgentX connection')
               self._net.start(self._oid_list)
 
-            if time.time() - self._lastupdate > self._update_freq:
+            if time.time() - self._lastupdate > self._update_period:
                 self._update()
 
             try:
                 self._net.run()
             except Exception as e:
                 self.logger.error('An exception occurred: %s' % e)
-                time.sleep(1)
+                sleep = 10
+                self.logger.error('Disconnecting and sleeping %d seconds' % sleep)
+                self._net.disconnect()
+                time.sleep(sleep)
 
     def stop(self):
         self.logger.debug('Stopping')

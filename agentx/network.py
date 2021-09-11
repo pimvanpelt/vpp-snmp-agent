@@ -53,7 +53,9 @@ class Network():
                 self.socket.connect(self._server_address)
             else:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.socket.connect(self._server_address.split(':'))
+                host, port=self._server_address.split(':')
+
+                self.socket.connect((host, int(port)))
             self.socket.settimeout(self._timeout)
             self._connected = True
         except socket.error:
@@ -71,9 +73,9 @@ class Network():
 
     def update(self, newdata):
         if len(self.data) == 0:
-            logger.debug("Setting initial serving dataset (%d OIDs)" % len(newdata))
+            logger.info("Setting initial serving dataset (%d OIDs)" % len(newdata))
         else:
-            logger.debug("Replacing serving dataset (%d OIDs)" % len(newdata))
+            logger.info("Replacing serving dataset (%d OIDs)" % len(newdata))
         self.data = newdata
         self.data_idx = sorted(self.data.keys(), key=lambda k: tuple(int(part) for part in k.split('.')))
 

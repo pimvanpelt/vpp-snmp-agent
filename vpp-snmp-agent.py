@@ -9,7 +9,7 @@ class MyAgent(agentx.Agent):
     def setup(self):
         global vppstat, vpp, logger
 
-        self.logger.info("Connecting to VPP Stats...")
+        self.logger.info("Connecting to VPP Stats Segment")
         vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
         if not vppstat.connect():
             self.logger.error("Can't connect to VPP Stats API, bailing")

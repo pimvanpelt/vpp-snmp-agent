@@ -6,22 +6,15 @@ from __future__ import (
     print_function,
 )
 
-# --------------------------------------------
-import logging
-
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-# --------------------------------------------
-
 import time
+import logging
 import agentx
 from agentx.dataset import DataSet
 from agentx.network import Network
 
-class AgentError(Exception):
-    pass
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
 
 
 class Agent(object):

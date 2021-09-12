@@ -6,8 +6,11 @@ from __future__ import (
     print_function,
 )
 
-# --------------------------------------------
+import socket
+import time
 import logging
+import agentx
+from agentx.pdu import PDU
 
 
 class NullHandler(logging.Handler):
@@ -15,18 +18,8 @@ class NullHandler(logging.Handler):
         pass
 
 
-logger = logging.getLogger('agentx.network')
-logger.addHandler(NullHandler())
-
 class NetworkError(Exception):
     pass
-
-# --------------------------------------------
-
-import socket
-import time
-import agentx
-from agentx.pdu import PDU
 
 
 class Network():
@@ -41,13 +34,16 @@ class Network():
         self._connected = False
         self._server_address = server_address
         self._timeout = 0.1 # Seconds
+        self.logger = logging.getLogger('agentx.network')
+        self.logger.addHandler(NullHandler())
+
 
     def connect(self):
         if self._connected:
             return
 
         try:
-            logger.info("Connecting to %s" % self._server_address)
+            self.logger.info("Connecting to %s" % self._server_address)
             if self._server_address.startswith('/'):
                 self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.socket.connect(self._server_address)
@@ -59,13 +55,13 @@ class Network():
             self.socket.settimeout(self._timeout)
             self._connected = True
         except socket.error:
-            logger.error("Failed to connect to %s" % self._server_address)
+            self.logger.error("Failed to connect to %s" % self._server_address)
             self._connected = False
 
     def disconnect(self):
         if not self._connected:
             return
-        logger.info("Disconnecting from %s" % self._server_address)
+        self.logger.info("Disconnecting from %s" % self._server_address)
         self.socket.close()
         self.socket = None
         self._connected = False
@@ -73,9 +69,9 @@ class Network():
 
     def update(self, newdata):
         if len(self.data) == 0:
-            logger.info("Setting initial serving dataset (%d OIDs)" % len(newdata))
+            self.logger.info("Setting initial serving dataset (%d OIDs)" % len(newdata))
         else:
-            logger.info("Replacing serving dataset (%d OIDs)" % len(newdata))
+            self.logger.info("Replacing serving dataset (%d OIDs)" % len(newdata))
         self.data = newdata
         self.data_idx = sorted(self.data.keys(), key=lambda k: tuple(int(part) for part in k.split('.')))
 
@@ -110,7 +106,7 @@ class Network():
     def _get_next_oid(self, oid, endoid):
         if oid in self.data:
             # Exact match found
-            #logger.debug('get_next_oid, exact match of %s' % oid)
+            #self.logger.debug('get_next_oid, exact match of %s' % oid)
             idx = self.data_idx.index(oid)
             if idx == (len(self.data_idx) - 1):
                 # Last Item in MIB, No match!
@@ -118,7 +114,7 @@ class Network():
             return self.data_idx[idx + 1]
         else:
             # No exact match, find prefix
-            #logger.debug('get_next_oid, no exact match of %s' % oid)
+            #self.logger.debug('get_next_oid, no exact match of %s' % oid)
             slist = oid.split('.')
             elist = endoid.split('.')
             for tmp_oid in self.data_idx:
@@ -140,20 +136,20 @@ class Network():
         if not self._connected:
             return
 
-        logger.debug("==== Open PDU ====")
+        self.logger.debug("==== Open PDU ====")
         pdu = self.new_pdu(agentx.AGENTX_OPEN_PDU)
         self.send_pdu(pdu)
         pdu = self.recv_pdu()
         self.session_id = pdu.session_id
 
-        logger.debug("==== Ping PDU ====")
+        self.logger.debug("==== Ping PDU ====")
         pdu = self.new_pdu(agentx.AGENTX_PING_PDU)
         self.send_pdu(pdu)
         pdu = self.recv_pdu()
 
-        logger.debug("==== Register PDU ====")
+        self.logger.debug("==== Register PDU ====")
         for oid in oid_list:
-            logger.info("Registering: %s" % (oid))
+            self.logger.info("Registering: %s" % (oid))
             pdu = self.new_pdu(agentx.AGENTX_REGISTER_PDU)
             pdu.oid = oid
             self.send_pdu(pdu)
@@ -181,21 +177,21 @@ class Network():
             return
 
         if not request:
-            logger.error("Empty PDU, connection closed!")
+            self.logger.error("Empty PDU, connection closed!")
             self.disconnect()
             raise NetworkError("Empty PDU, disconnecting")
 
         response = self.response_pdu(request)
         if request.type == agentx.AGENTX_GET_PDU:
-            logger.debug("Received GET PDU")
+            self.logger.debug("Received GET PDU")
             for rvalue in request.range_list:
                 oid = rvalue[0]
-                logger.debug("OID: %s" % (oid))
+                self.logger.debug("OID: %s" % (oid))
                 if oid in self.data:
-                    logger.debug("OID Found")
+                    self.logger.debug("OID Found")
                     response.values.append(self.data[oid])
                 else:
-                    logger.debug("OID Not Found!")
+                    self.logger.debug("OID Not Found!")
                     response.values.append({
                         'type': agentx.TYPE_NOSUCHOBJECT,
                         'name': rvalue[0],
@@ -203,10 +199,10 @@ class Network():
                     })
 
         elif request.type == agentx.AGENTX_GETNEXT_PDU:
-            logger.debug("Received GET_NEXT PDU")
+            self.logger.debug("Received GET_NEXT PDU")
             for rvalue in request.range_list:
                 oid = self._get_next_oid(rvalue[0], rvalue[1])
-                logger.debug("GET_NEXT: %s => %s" % (rvalue[0], oid))
+                self.logger.debug("GET_NEXT: %s => %s" % (rvalue[0], oid))
                 if oid:
                     response.values.append(self.data[oid])
                 else:
@@ -217,6 +213,6 @@ class Network():
                     })
 
         else:
-            logger.warn("Received unsupported PDU %d" % request.type)
+            self.logger.warn("Received unsupported PDU %d" % request.type)
 
         self.send_pdu(response)

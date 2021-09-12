@@ -32,7 +32,14 @@ sudo pip install pyinstaller
 pyinstaller vpp-snmp-agent.py  --onefile
 
 ## Run it on console
-dist/vpp-snmp-agent
+dist/vpp-snmp-agent -h
+usage: vpp-snmp-agent [-h] [-a ADDRESS] [-p PERIOD] [-d]
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -a ADDRESS  Location of the SNMPd agent (unix-path or host:port), default localhost:705
+  -p PERIOD   Period to poll VPP, default 30 (seconds)
+  -d          Enable debug, default False
 
 ## Install
 sudo cp dist/vpp-snmp-agent /usr/sbin/

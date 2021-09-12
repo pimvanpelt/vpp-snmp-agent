@@ -6,7 +6,8 @@ ConditionPathExists=/etc/snmp/snmpd.conf
 [Service]
 Type=simple
 NetworkNamespacePath=/var/run/netns/dataplane
-ExecStart=/usr/sbin/vpp-snmp-agent
+ExecStart=/usr/sbin/vpp-snmp-agent -a localhost:705 -p 30
+User=Debian-snmp
 Group=vpp
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure

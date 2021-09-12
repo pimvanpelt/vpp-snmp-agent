@@ -3,7 +3,15 @@
 
 from vppstats import VPPStats
 from vppapi import VPPApi
+import sys
 import agentx
+
+try:
+    import argparse
+except ImportError:
+    print("ERROR: install argparse manually: sudo pip install argparse")
+    sys.exit(2)
+
 
 class MyAgent(agentx.Agent):
     def setup(self):
@@ -138,10 +146,19 @@ class MyAgent(agentx.Agent):
         return ds
 
 def main():
-    agentx.setup_logging(debug=False)
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-a', dest='address', default="localhost:705", type=str, help="""Location of the SNMPd agent (unix-path or host:port), default localhost:705""")
+    parser.add_argument('-p', dest='period', type=int, default=30, help="""Period to poll VPP, default 30 (seconds)""")
+    parser.add_argument('-d', dest='debug', action='store_true', help="""Enable debug, default False""")
+
+    args = parser.parse_args()
+    if args.debug:
+        print("Arguments:", args)
+
+    agentx.setup_logging(debug=args.debug)
 
     try:
-        a = MyAgent(server_address='localhost:705', period=30)
+        a = MyAgent(server_address=args.address, period=args.period)
         a.run()
     except Exception as e:
         print("Unhandled exception:", e)

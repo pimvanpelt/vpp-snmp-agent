@@ -77,7 +77,7 @@ class MyAgent(agentx.Agent):
             if not ifname in ifaces:
                 self.logger.warning("Could not get AdminStatus for interface %s", ifname)
             else:
-                if int(ifaces[ifname].flags) & 2:
+                if int(ifaces[ifname].flags) & 1:
                     admin_status = 1  # up
                 else:
                     admin_status = 2  # down
@@ -87,7 +87,7 @@ class MyAgent(agentx.Agent):
             if not ifname in ifaces:
                 self.logger.warning("Could not get OperStatus for interface %s", ifname)
             else:
-                if int(ifaces[ifname].flags) & 1:
+                if int(ifaces[ifname].flags) & 2:
                     oper_status = 1  # up
                 else:
                     oper_status = 2  # down

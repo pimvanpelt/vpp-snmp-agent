@@ -55,10 +55,9 @@ class Agent(object):
                 self._net.run()
             except Exception as e:
                 self.logger.error('An exception occurred: %s' % e)
-                sleep = 10
-                self.logger.error('Disconnecting and sleeping %d seconds' % sleep)
+                self.logger.error('Reconnecting')
                 self._net.disconnect()
-                time.sleep(sleep)
+                time.sleep(0.1)
 
     def stop(self):
         self.logger.debug('Stopping')

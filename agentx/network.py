@@ -17,6 +17,8 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
+logger = logging.getLogger('agentx.network')
+logger.addHandler(NullHandler())
 
 class NetworkError(Exception):
     pass
@@ -34,8 +36,6 @@ class Network():
         self._connected = False
         self._server_address = server_address
         self._timeout = 0.1 # Seconds
-        self.logger = logging.getLogger('agentx.network')
-        self.logger.addHandler(NullHandler())
 
 
     def connect(self):
@@ -43,7 +43,7 @@ class Network():
             return
 
         try:
-            self.logger.info("Connecting to %s" % self._server_address)
+            logger.info("Connecting to %s" % self._server_address)
             if self._server_address.startswith('/'):
                 self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.socket.connect(self._server_address)
@@ -55,13 +55,13 @@ class Network():
             self.socket.settimeout(self._timeout)
             self._connected = True
         except socket.error:
-            self.logger.error("Failed to connect to %s" % self._server_address)
+            logger.error("Failed to connect to %s" % self._server_address)
             self._connected = False
 
     def disconnect(self):
         if not self._connected:
             return
-        self.logger.info("Disconnecting from %s" % self._server_address)
+        logger.info("Disconnecting from %s" % self._server_address)
         self.socket.close()
         self.socket = None
         self._connected = False
@@ -69,10 +69,13 @@ class Network():
 
     def update(self, newdata):
         if len(self.data) == 0:
-            self.logger.info("Setting initial serving dataset (%d OIDs)" % len(newdata))
+            logger.info("Setting initial serving dataset (%d OIDs)" % len(newdata))
         else:
-            self.logger.info("Replacing serving dataset (%d OIDs)" % len(newdata))
-        self.data = newdata
+            logger.info("Replacing serving dataset (%d OIDs)" % len(newdata))
+        del self.data
+        self.data = newdata.copy()
+
+        del self.data_idx
         self.data_idx = sorted(self.data.keys(), key=lambda k: tuple(int(part) for part in k.split('.')))
 
     def new_pdu(self, type):
@@ -106,7 +109,7 @@ class Network():
     def _get_next_oid(self, oid, endoid):
         if oid in self.data:
             # Exact match found
-            #self.logger.debug('get_next_oid, exact match of %s' % oid)
+            #logger.debug('get_next_oid, exact match of %s' % oid)
             idx = self.data_idx.index(oid)
             if idx == (len(self.data_idx) - 1):
                 # Last Item in MIB, No match!
@@ -114,7 +117,7 @@ class Network():
             return self.data_idx[idx + 1]
         else:
             # No exact match, find prefix
-            #self.logger.debug('get_next_oid, no exact match of %s' % oid)
+            #logger.debug('get_next_oid, no exact match of %s' % oid)
             slist = oid.split('.')
             elist = endoid.split('.')
             for tmp_oid in self.data_idx:
@@ -136,20 +139,20 @@ class Network():
         if not self._connected:
             return
 
-        self.logger.debug("==== Open PDU ====")
+        logger.debug("==== Open PDU ====")
         pdu = self.new_pdu(agentx.AGENTX_OPEN_PDU)
         self.send_pdu(pdu)
         pdu = self.recv_pdu()
         self.session_id = pdu.session_id
 
-        self.logger.debug("==== Ping PDU ====")
+        logger.debug("==== Ping PDU ====")
         pdu = self.new_pdu(agentx.AGENTX_PING_PDU)
         self.send_pdu(pdu)
         pdu = self.recv_pdu()
 
-        self.logger.debug("==== Register PDU ====")
+        logger.debug("==== Register PDU ====")
         for oid in oid_list:
-            self.logger.info("Registering: %s" % (oid))
+            logger.info("Registering: %s" % (oid))
             pdu = self.new_pdu(agentx.AGENTX_REGISTER_PDU)
             pdu.oid = oid
             self.send_pdu(pdu)
@@ -177,21 +180,21 @@ class Network():
             return
 
         if not request:
-            self.logger.error("Empty PDU, connection closed!")
+            logger.error("Empty PDU, connection closed!")
             self.disconnect()
             raise NetworkError("Empty PDU, disconnecting")
 
         response = self.response_pdu(request)
         if request.type == agentx.AGENTX_GET_PDU:
-            self.logger.debug("Received GET PDU")
+            logger.debug("Received GET PDU")
             for rvalue in request.range_list:
                 oid = rvalue[0]
-                self.logger.debug("OID: %s" % (oid))
+                logger.debug("OID: %s" % (oid))
                 if oid in self.data:
-                    self.logger.debug("OID Found")
+                    logger.debug("OID Found")
                     response.values.append(self.data[oid])
                 else:
-                    self.logger.debug("OID Not Found!")
+                    logger.debug("OID Not Found!")
                     response.values.append({
                         'type': agentx.TYPE_NOSUCHOBJECT,
                         'name': rvalue[0],
@@ -199,10 +202,10 @@ class Network():
                     })
 
         elif request.type == agentx.AGENTX_GETNEXT_PDU:
-            self.logger.debug("Received GET_NEXT PDU")
+            logger.debug("Received GET_NEXT PDU")
             for rvalue in request.range_list:
                 oid = self._get_next_oid(rvalue[0], rvalue[1])
-                self.logger.debug("GET_NEXT: %s => %s" % (rvalue[0], oid))
+                logger.debug("GET_NEXT: %s => %s" % (rvalue[0], oid))
                 if oid:
                     response.values.append(self.data[oid])
                 else:
@@ -213,6 +216,6 @@ class Network():
                     })
 
         else:
-            self.logger.warn("Received unsupported PDU %d" % request.type)
+            logger.warn("Received unsupported PDU %d" % request.type)
 
         self.send_pdu(response)

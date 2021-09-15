@@ -12,14 +12,14 @@ import logging
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
+logger = logging.getLogger('agentx.vppapi')
+logger.addHandler(NullHandler())
 
 
 class VPPApi():
     def __init__(self, address='/run/vpp/api.sock', clientname='vppapi-client'):
         self.address = address
         self.connected = False
-        self.logger = logging.getLogger('agentx.vppapi')
-        self.logger.addHandler(NullHandler())
         self.clientname = clientname
         self.vpp = None
 
@@ -36,19 +36,19 @@ class VPPApi():
                 jsonfiles.append(os.path.join(root, filename))
 
         if not jsonfiles:
-            self.logger.error('no json api files found')
+            logger.error('no json api files found')
             return False
 
         self.vpp = VPPApiClient(apifiles=jsonfiles,
                                 server_address=self.address)
         try:
-            self.logger.info('Connecting to VPP')
+            logger.info('Connecting to VPP')
             self.vpp.connect(self.clientname)
         except:
             return False
 
         v = self.vpp.api.show_version()
-        self.logger.info('VPP version is %s' % v.version)
+        logger.info('VPP version is %s' % v.version)
 
         self.connected = True
         return True
@@ -68,13 +68,13 @@ class VPPApi():
         try:
             iface_list = self.vpp.api.sw_interface_dump()
         except Exception as e:
-            self.logger.error("VPP communication error, disconnecting", e)
+            logger.error("VPP communication error, disconnecting", e)
             self.vpp.disconnect()
             self.connected = False
             return ret
 
         if not iface_list:
-            self.logger.error("Can't get interface list")
+            logger.error("Can't get interface list")
             return ret
 
         for iface in iface_list:

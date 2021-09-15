@@ -15,6 +15,8 @@ import agentx
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
+logger = logging.getLogger('agentx.pdu')
+logger.addHandler(NullHandler())
 
 
 class PDU(object):
@@ -28,25 +30,23 @@ class PDU(object):
         self.decode_buf = ''
         self.state = {}
         self.values = []
-        self.logger = logging.getLogger('agentx.pdu')
-        self.logger.addHandler(NullHandler())
 
     def dump(self):
         name = agentx.PDU_TYPE_NAME[self.type]
-        self.logger.debug('PDU DUMP: New PDU')
-        self.logger.debug(
+        logger.debug('PDU DUMP: New PDU')
+        logger.debug(
             'PDU DUMP: Meta      : [%s: %d %d %d]' %
             (name, self.session_id, self.transaction_id, self.packet_id))
         if 'payload_length' in self.state:
-            self.logger.debug('PDU DUMP: Length    : %s' %
+            logger.debug('PDU DUMP: Length    : %s' %
                          self.state['payload_length'])
         if hasattr(self, 'response'):
-            self.logger.debug('PDU DUMP: Response  : %s' % self.response)
+            logger.debug('PDU DUMP: Response  : %s' % self.response)
         if hasattr(self, 'values'):
-            self.logger.debug('PDU DUMP: Values    : %s' %
+            logger.debug('PDU DUMP: Values    : %s' %
                          pprint.pformat(self.values))
         if hasattr(self, 'range_list'):
-            self.logger.debug('PDU DUMP: Range list: %s' %
+            logger.debug('PDU DUMP: Range list: %s' %
                          pprint.pformat(self.range_list))
 
     # ====================================================
@@ -102,7 +102,7 @@ class PDU(object):
             # No data
             pass
         else:
-            self.logger.error('Unknown Type:' % type)
+            logger.error('Unknown Type:' % type)
         return buf
 
     def encode_header(self, pdu_type, payload_length=0, flags=0):
@@ -175,8 +175,8 @@ class PDU(object):
             oid = '.'.join(str(i) for i in sub_ids)
             return oid, ret['include']
         except Exception as e:
-            self.logger.exception('Invalid packing OID header')
-            self.logger.debug('%s' % pprint.pformat(self.decode_buf))
+            logger.exception('Invalid packing OID header')
+            logger.debug('%s' % pprint.pformat(self.decode_buf))
 
     def decode_search_range(self):
         start_oid, include = self.decode_oid()
@@ -201,14 +201,14 @@ class PDU(object):
             self.decode_buf = self.decode_buf[l + padding:]
             return buf
         except Exception as e:
-            self.logger.exception('Invalid packing octet header')
+            logger.exception('Invalid packing octet header')
 
     def decode_value(self):
         try:
             vtype, _ = struct.unpack('!HH', self.decode_buf[:4])
             self.decode_buf = self.decode_buf[4:]
         except Exception as e:
-            self.logger.exception('Invalid packing value header')
+            logger.exception('Invalid packing value header')
         oid, _ = self.decode_oid()
         if vtype in [
                 agentx.TYPE_INTEGER, agentx.TYPE_COUNTER32,
@@ -235,7 +235,7 @@ class PDU(object):
             # No data
             data = None
         else:
-            self.logger.error('Unknown Type: %s' % vtype)
+            logger.error('Unknown Type: %s' % vtype)
         return {'type': vtype, 'name': oid, 'data': data}
 
     def decode_header(self):
@@ -261,11 +261,11 @@ class PDU(object):
             self.decode_buf = self.decode_buf[:ret['payload_length']]
             if ret['flags'] & 0x08:  # content present
                 context = self.decode_octet()
-                self.logger.debug('Context: %s' % context)
+                logger.debug('Context: %s' % context)
             return ret
         except Exception as e:
-            self.logger.exception('Invalid packing: %d' % len(self.decode_buf))
-            self.logger.debug('%s' % pprint.pformat(self.decode_buf))
+            logger.exception('Invalid packing: %d' % len(self.decode_buf))
+            logger.debug('%s' % pprint.pformat(self.decode_buf))
 
     def decode(self, buf):
         self.set_decode_buf(buf)
@@ -304,4 +304,4 @@ class PDU(object):
         else:
             pdu_type_str = agentx.PDU_TYPE_NAME.get(
                 ret['pdu_type'], 'Unknown:' + str(ret['pdu_type']))
-            self.logger.error('Unsupported PDU type:' + pdu_type_str)
+            logger.error('Unsupported PDU type:' + pdu_type_str)

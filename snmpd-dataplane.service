@@ -9,6 +9,8 @@ ExecStartPre=/bin/mkdir -p /var/run/agentx-dataplane/
 NetworkNamespacePath=/var/run/netns/dataplane
 ExecStart=/usr/sbin/snmpd -LOw -u Debian-snmp -g vpp -I -smux,mteTrigger,mteTriggerConf -f -p /run/snmpd-dataplane.pid
 ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target

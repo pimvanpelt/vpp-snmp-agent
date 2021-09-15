@@ -8,19 +8,13 @@ from __future__ import (
 
 import time
 import agentx
-import logging
 
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-
+class DataSetError(Exception):
+    pass
 
 class DataSet():
     def __init__(self):
         self._data = {}
-        self.logger = logging.getLogger('agentx.dataset')
-        self.logger.addHandler(NullHandler())
 
     def set(self, oid, oid_type, value):
         if oid_type.startswith('int'):
@@ -42,7 +36,7 @@ class DataSet():
         elif oid_type == 'counter64' or oid_type == 'uint64' or oid_type == 'u64':
             t = agentx.TYPE_COUNTER64
         else:
-            self.logger.error('Invalid oid_type: %s' % (oid_type))
+            raise DataSetErrror('Invalid oid_type: %s' % (oid_type))
             return
 
         self._data[oid] = {

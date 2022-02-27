@@ -54,10 +54,10 @@ interfaces:
     description: "Infra: xsw0.chrma0:2"
     lcp: "xe1-0"
   "TenGigabitEthernet6/0/0.3102":
-    description: "Infra: QinQ to Solnet for Daedalean"
+    description: "Infra: QinQ to L2 Provider"
     lcp: "xe1-0.3102"
   "TenGigabitEthernet6/0/0.310211":
-    description: "Cust: Daedalean IP Transit"
+    description: "Cust: Customer IP Transit"
     lcp: "xe1-0.3102.11"
 ```
 
@@ -70,7 +70,7 @@ the `ifName`. However, if the config file is read, it will change the behavior a
    become `xe1-0` while `tap3.310211` will become `xe1-0.3102.11`.
 *  The `ifAlias` OID for a PHY will be set to the `description` field.
 *  The `ifAlias` OID for a TAP will be set to the string `LCP: ` followed by its PHY `ifName`. For example,
-   `xe1-0.3102.11` will become `LCP: TenGigabitEthernet6/0/0.310211 (tap9)`
+   `xe1-0.3102.11` will become `LCP TenGigabitEthernet6/0/0.310211 (tap9)`
 
 ## SNMPd config
 

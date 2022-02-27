@@ -69,7 +69,7 @@ the `ifName`. However, if the config file is read, it will change the behavior a
    interface. The `ifName` field will be rewritten to the _LIP_ `host-if`. For example, `tap3` above will
    become `xe1-0` while `tap3.310211` will become `xe1-0.3102.11`.
 *  The `ifAlias` OID for a PHY will be set to the `description` field.
-*  The `ifAlias` OID for a TAP will be set to the string `LCP: ` followed by its PHY `ifName`. For example,
+*  The `ifAlias` OID for a TAP will be set to the string `LCP ` followed by its PHY `ifName`. For example,
    `xe1-0.3102.11` will become `LCP TenGigabitEthernet6/0/0.310211 (tap9)`
 
 ## SNMPd config

@@ -4,6 +4,7 @@
 from vppstats import VPPStats
 from vppapi import VPPApi
 import sys
+import yaml
 import agentx
 
 try:
@@ -12,10 +13,39 @@ except ImportError:
     print("ERROR: install argparse manually: sudo pip install argparse")
     sys.exit(2)
 
+def get_phy_by_sw_if_index(ifaces, sw_if_index):
+    try:
+        for k,v in ifaces.items():
+            if v.sw_if_index == sw_if_index:
+                return v
+    except:
+        pass
+    return None
+
+
+def get_lcp_by_host_sw_if_index(lcp, host_sw_if_index):
+    try:
+        for k,v in lcp.items():
+            if v['host_sw_if_index'] == host_sw_if_index:
+                return v
+    except:
+        pass
+    return None
+
 
 class MyAgent(agentx.Agent):
     def setup(self):
-        global vppstat, vpp, logger
+        global vppstat, vpp, logger, args
+
+        self.config = None
+        if args.config:
+            try:
+                with open(args.config, "r") as f:
+                    self.logger.info("Loading configfile %s" % args.config)
+                    self.config = yaml.load(f, Loader = yaml.FullLoader)
+                    self.logger.debug("Config: %s" % self.config)
+            except:
+                self.logger.error("Couldn't read config from %s" % args.config)
 
         self.logger.info("Connecting to VPP Stats Segment")
         vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
@@ -41,15 +71,45 @@ class MyAgent(agentx.Agent):
 
         ds = agentx.DataSet()
         ifaces = vpp.get_ifaces()
-        self.logger.debug("%d VPP interfaces retrieved" % len(ifaces))
-        self.logger.debug("%d VPP Stats interfaces retrieved" % len(vppstat['/if/names']))
+        lcp = vpp.get_lcp()
+        num_ifaces=len(ifaces)
+        num_vppstat=len(vppstat['/if/names'])
+        num_lcp=len(lcp)
+        self.logger.debug("LCP: %s" % (lcp))
+        self.logger.debug("Retrieved Interfaces: vppapi=%d vppstats=%d lcp=%d" % (num_ifaces, num_vppstat, num_lcp))
+
+        if num_ifaces != num_vppstat:
+            self.logger.error("Disconnecting due to error: vppapi=%d vppstats=%d" % (num_ifaces, num_vppstat))
+            vpp.disconnect()
+            vppstat.disconnect()
+            return False
+
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
             idx = 1000+i
 
             ds.set('1.3.6.1.2.1.2.2.1.1.%u' % (idx), 'int', idx)
-            ds.set('1.3.6.1.2.1.2.2.1.2.%u' % (idx), 'str', ifname)
+
+            ifName=ifname
+            ifAlias=None
+            try:
+                if self.config and ifname.startswith('tap'):
+                    host_sw_if_index = ifaces[ifname].sw_if_index
+                    lip = get_lcp_by_host_sw_if_index(lcp, host_sw_if_index)
+                    if lip:
+                        phy = get_phy_by_sw_if_index(ifaces, lip['phy_sw_if_index'])
+                        self.logger.debug("LIP: %s PHY: %s" % (lip, phy))
+                        if phy:
+                            ifName = self.config['interfaces'][phy.interface_name]['lcp']
+                            self.logger.debug("Setting ifName of %s to '%s'" % (ifname, ifName))
+                            ifAlias = "LCP %s (%s)" % (phy.interface_name,ifname)
+                            self.logger.debug("Setting ifAlias of %s to '%s'" % (ifname, ifAlias))
+            except:
+                self.logger.debug("No config entry found for ifname %s" % (ifname))
+                pass
+
+            ds.set('1.3.6.1.2.1.2.2.1.2.%u' % (idx), 'str', ifName)
 
             if ifname.startswith("loop"):
                 ds.set('1.3.6.1.2.1.2.2.1.3.%u' % (idx), 'int', 24)  # softwareLoopback
@@ -114,7 +174,7 @@ class MyAgent(agentx.Agent):
             ds.set('1.3.6.1.2.1.2.2.1.19.%u' % (idx), 'u32', vppstat['/if/drops'][:, i].sum() % 2**32)
             ds.set('1.3.6.1.2.1.2.2.1.20.%u' % (idx), 'u32', vppstat['/if/tx-error'][:, i].sum() % 2**32)
 
-            ds.set('1.3.6.1.2.1.31.1.1.1.1.%u' % (idx), 'str', ifname)
+            ds.set('1.3.6.1.2.1.31.1.1.1.1.%u' % (idx), 'str', ifName)
             ds.set('1.3.6.1.2.1.31.1.1.1.2.%u' % (idx), 'u32', vppstat['/if/rx-multicast'][:, i].sum_packets() % 2**32)
             ds.set('1.3.6.1.2.1.31.1.1.1.3.%u' % (idx), 'u32', vppstat['/if/rx-broadcast'][:, i].sum_packets() % 2**32)
             ds.set('1.3.6.1.2.1.31.1.1.1.4.%u' % (idx), 'u32', vppstat['/if/tx-multicast'][:, i].sum_packets() % 2**32)
@@ -141,14 +201,26 @@ class MyAgent(agentx.Agent):
 
             ds.set('1.3.6.1.2.1.31.1.1.1.16.%u' % (idx), 'int', 2)   # Hardcode to false(2)
             ds.set('1.3.6.1.2.1.31.1.1.1.17.%u' % (idx), 'int', 1)   # Hardcode to true(1)
-            ds.set('1.3.6.1.2.1.31.1.1.1.18.%u' % (idx), 'str', ifname)
+
+            if self.config and not ifAlias:
+                try:
+                    ifAlias = self.config['interfaces'][ifname]['description']
+                    self.logger.debug("Setting ifAlias of %s to '%s'" % (ifname, ifAlias))
+                except:
+                    pass
+            if not ifAlias:
+                ifAlias = ifname
+            ds.set('1.3.6.1.2.1.31.1.1.1.18.%u' % (idx), 'str', ifAlias)
             ds.set('1.3.6.1.2.1.31.1.1.1.19.%u' % (idx), 'ticks', 0)  # Hardcode to Timeticks: (0) 0:00:00.00
         return ds
 
 def main():
+    global args
+
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-a', dest='address', default="localhost:705", type=str, help="""Location of the SNMPd agent (unix-path or host:port), default localhost:705""")
     parser.add_argument('-p', dest='period', type=int, default=30, help="""Period to poll VPP, default 30 (seconds)""")
+    parser.add_argument('-c', dest='config', type=str, help="""Optional YAML configuration file, default empty""")
     parser.add_argument('-d', dest='debug', action='store_true', help="""Enable debug, default False""")
 
     args = parser.parse_args()

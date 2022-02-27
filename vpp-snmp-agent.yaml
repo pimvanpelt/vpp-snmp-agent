@@ -1,0 +1,14 @@
+## Example configuration file for VPP SNMP Agent
+##
+## See README.md for details on what this (optional) file does.
+
+interfaces:
+  "GigabitEthernet5/0/0":
+    description: "Infra: xsw0.chrma0.ipng.ch Te0/2"
+    lcp: "e0"
+  "GigabitEthernet5/0/0.3102":
+    description: "Infra: QinQ to L2 Provider"
+    lcp: "e0.3102"
+  "GigabitEthernet5/0/0.310211":
+    description: "Cust: Downstream IP Transit"
+    lcp: "e0.3102.11"

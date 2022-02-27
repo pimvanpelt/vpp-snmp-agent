@@ -36,11 +36,41 @@ optional arguments:
   -h, --help  show this help message and exit
   -a ADDRESS  Location of the SNMPd agent (unix-path or host:port), default localhost:705
   -p PERIOD   Period to poll VPP, default 30 (seconds)
+  -c CONFIG   Optional YAML configuration file, default empty
   -d          Enable debug, default False
 
 ## Install
 sudo cp dist/vpp-snmp-agent /usr/sbin/
 ```
+
+## Configuration file
+
+A simple convenience configfile can provide a mapping between VPP interface names, Linux Control Plane
+interface names, and descriptions. An example:
+
+```
+interfaces:
+  "TenGigabitEthernet6/0/0":
+    description: "Infra: xsw0.chrma0:2"
+    lcp: "xe1-0"
+  "TenGigabitEthernet6/0/0.3102":
+    description: "Infra: QinQ to Solnet for Daedalean"
+    lcp: "xe1-0.3102"
+  "TenGigabitEthernet6/0/0.310211":
+    description: "Cust: Daedalean IP Transit"
+    lcp: "xe1-0.3102.11"
+```
+
+This configuration file is completely optional. If the `-c` flag is empty, or it's set but the file does
+not exist, the Agent will simply enumerate all interfaces, and set the `ifAlias` OID to the same value as
+the `ifName`. However, if the config file is read, it will change the behavior as follows:
+
+*  Any `tapNN` interface names from VPP will be matched to their PHY by looking up their Linux Control Plane
+   interface. The `ifName` field will be rewritten to the _LIP_ `host-if`. For example, `tap3` above will
+   become `xe1-0` while `tap3.310211` will become `xe1-0.3102.11`.
+*  The `ifAlias` OID for a PHY will be set to the `description` field.
+*  The `ifAlias` OID for a TAP will be set to the string `LCP: ` followed by its PHY `ifName`. For example,
+   `xe1-0.3102.11` will become `LCP: TenGigabitEthernet6/0/0.310211 (tap9)`
 
 ## SNMPd config
 

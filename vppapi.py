@@ -7,6 +7,7 @@ from vpp_papi import VPPApiClient
 import os
 import fnmatch
 import logging
+import socket
 
 
 class NullHandler(logging.Handler):
@@ -80,4 +81,46 @@ class VPPApi():
         for iface in iface_list:
             ret[iface.interface_name] = iface
 
+        return ret
+
+    def get_lcp(self):
+        ret = {}
+        if not self.connected:
+            return ret
+
+
+        try:
+            lcp_list = self.vpp.api.lcp_itf_pair_get()
+        except Exception as e:
+            logger.error("VPP communication error, disconnecting", e)
+            self.vpp.disconnect()
+            self.connected = False
+            return ret
+
+        if not lcp_list or not lcp_list[1]:
+            logger.error("Can't get LCP list")
+            return ret
+
+        ## TODO(pim) - fix upstream, the indexes are in network byte order and
+        ## the message is messed up. This hack allows for both little endian and
+        ## big endian responses, and will be removed once VPP's LinuxCP is updated
+        ## and rolled out to AS8298
+        for lcp in lcp_list[1]:
+            if lcp.phy_sw_if_index > 65535 or lcp.host_sw_if_index > 65535 or lcp.vif_index > 65535:
+                i = {
+                  'phy_sw_if_index': socket.ntohl(lcp.phy_sw_if_index),
+                  'host_sw_if_index': socket.ntohl(lcp.host_sw_if_index),
+                  'vif_index': socket.ntohl(lcp.vif_index),
+                  'host_if_name': lcp.host_if_name,
+                  'namespace': lcp.namespace
+                  }
+            else:
+                i = {
+                  'phy_sw_if_index': lcp.phy_sw_if_index,
+                  'host_sw_if_index': lcp.host_sw_if_index,
+                  'vif_index': lcp.vif_index,
+                  'host_if_name': lcp.host_if_name,
+                  'namespace': lcp.namespace
+                  }
+            ret[lcp.host_if_name] = i
         return ret

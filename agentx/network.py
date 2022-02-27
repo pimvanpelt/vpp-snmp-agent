@@ -97,7 +97,7 @@ class Network():
         self.socket.send(pdu.encode())
 
     def recv_pdu(self):
-        buf = self.socket.recv(8192)
+        buf = self.socket.recv(100000)
         if not buf: return None
         pdu = PDU()
         pdu.decode(buf)

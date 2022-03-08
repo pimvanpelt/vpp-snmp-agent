@@ -65,13 +65,16 @@ class MyAgent(agentx.Agent):
 
 
     def update(self):
-        global vppstat, vpp
+        global vppstat, vpp, args
         vppstat.connect()
         vpp.connect()
 
         ds = agentx.DataSet()
         ifaces = vpp.get_ifaces()
-        lcp = vpp.get_lcp()
+        if args.disable_lcp:
+            lcp = []
+        else:
+            lcp = vpp.get_lcp()
         num_ifaces=len(ifaces)
         num_vppstat=len(vppstat['/if/names'])
         num_lcp=len(lcp)
@@ -94,7 +97,7 @@ class MyAgent(agentx.Agent):
             ifName=ifname
             ifAlias=None
             try:
-                if self.config and ifname.startswith('tap'):
+                if (not args.disable_lcp) and self.config and ifname.startswith('tap'):
                     host_sw_if_index = ifaces[ifname].sw_if_index
                     lip = get_lcp_by_host_sw_if_index(lcp, host_sw_if_index)
                     if lip:
@@ -218,6 +221,7 @@ def main():
     global args
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-disable-lcp', dest='disable_lcp', action='store_true', help="""Disable Linux Control Plane integration""")
     parser.add_argument('-a', dest='address', default="localhost:705", type=str, help="""Location of the SNMPd agent (unix-path or host:port), default localhost:705""")
     parser.add_argument('-p', dest='period', type=int, default=30, help="""Period to poll VPP, default 30 (seconds)""")
     parser.add_argument('-c', dest='config', type=str, help="""Optional YAML configuration file, default empty""")

@@ -82,11 +82,7 @@ class MyAgent(agentx.Agent):
         self.logger.debug("Retrieved Interfaces: vppapi=%d vppstats=%d lcp=%d" % (num_ifaces, num_vppstat, num_lcp))
 
         if num_ifaces != num_vppstat:
-            self.logger.error("Disconnecting due to error: vppapi=%d vppstats=%d" % (num_ifaces, num_vppstat))
-            vpp.disconnect()
-            vppstat.disconnect()
-            return False
-
+            self.logger.warning("Interfaces count mismatch: vppapi=%d vppstats=%d" % (num_ifaces, num_vppstat))
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]

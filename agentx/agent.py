@@ -38,7 +38,9 @@ class Agent(object):
 
     def run(self):
         self.logger.info('Calling setup')
-        self.setup()
+        if not self.setup():
+            self.logger.error('Setup failed - exiting')
+            return
 
         self.logger.info('Initial update')
         self._update()

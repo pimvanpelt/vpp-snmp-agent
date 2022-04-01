@@ -49,9 +49,7 @@ class MyAgent(agentx.Agent):
 
         self.logger.info("Connecting to VPP Stats Segment")
         vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
-        if not vppstat.connect():
-            self.logger.error("Can't connect to VPP Stats API, bailing")
-            return False
+        vppstat.connect()
 
         vpp = VPPApi(clientname='vpp-snmp-agent')
         if not vpp.connect():

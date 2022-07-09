@@ -33,8 +33,12 @@ class Agent(object):
 
     def _update(self):
         ds = self.update()
+        if not ds:
+            return False
+
         self._net.update(ds._data)
         self._lastupdate = time.time()
+        return True
 
     def run(self):
         self.logger.info('Calling setup')
@@ -51,7 +55,9 @@ class Agent(object):
               self._net.start(self._oid_list)
 
             if time.time() - self._lastupdate > self._update_period:
-                self._update()
+                if not self._update():
+                    self.logger.warning('Update failed, last successful update was %s' % self._lastupdate)
+                    time.sleep(1)
 
             try:
                 self._net.run()

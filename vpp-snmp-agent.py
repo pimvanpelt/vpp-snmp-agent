@@ -47,13 +47,19 @@ class MyAgent(agentx.Agent):
             except:
                 self.logger.error("Couldn't read config from %s" % args.config)
 
-        self.logger.info("Connecting to VPP Stats Segment")
-        vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
-        vppstat.connect()
+        try:
+            self.logger.info("Connecting to VPP Stats Segment")
+            vppstat = VPPStats(socketname='/run/vpp/stats.sock', timeout=2)
+            vppstat.connect()
+        except:
+            self.logger.error("Could not connect to VPPStats segment")
+            return False
 
-        vpp = VPPApi(clientname='vpp-snmp-agent')
-        if not vpp.connect():
-            logger.error("Can't connect to VPP API, bailing")
+        try:
+            vpp = VPPApi(clientname='vpp-snmp-agent')
+            vpp.connect()
+        except:
+            self.logger.error("Could not connect to VPP API")
             return False
 
         self.register('1.3.6.1.2.1.2.2.1')
@@ -64,15 +70,23 @@ class MyAgent(agentx.Agent):
 
     def update(self):
         global vppstat, vpp, args
-        vppstat.connect()
-        vpp.connect()
+
+        try:
+            vppstat.connect()
+        except:
+            self.logger.error("Could not connect to VPPStats segment")
+            return False
+
+        try:
+            vpp.connect()
+        except:
+            self.logger.error("Could not connect to VPP API")
+            return False
 
         ds = agentx.DataSet()
         ifaces = vpp.get_ifaces()
-        if args.disable_lcp:
-            lcp = []
-        else:
-            lcp = vpp.get_lcp()
+        lcp = vpp.get_lcp()
+
         num_ifaces=len(ifaces)
         num_vppstat=len(vppstat['/if/names'])
         num_lcp=len(lcp)
@@ -80,7 +94,8 @@ class MyAgent(agentx.Agent):
         self.logger.debug("Retrieved Interfaces: vppapi=%d vppstats=%d lcp=%d" % (num_ifaces, num_vppstat, num_lcp))
 
         if num_ifaces != num_vppstat:
-            self.logger.warning("Interfaces count mismatch: vppapi=%d vppstats=%d" % (num_ifaces, num_vppstat))
+            self.logger.error("Interfaces count mismatch: vppapi=%d vppstats=%d" % (num_ifaces, num_vppstat))
+            return False
 
         for i in range(len(vppstat['/if/names'])):
             ifname = vppstat['/if/names'][i]
@@ -91,7 +106,7 @@ class MyAgent(agentx.Agent):
             ifName=ifname
             ifAlias=None
             try:
-                if (not args.disable_lcp) and self.config and ifname.startswith('tap'):
+                if self.config and ifname.startswith('tap'):
                     host_sw_if_index = ifaces[ifname].sw_if_index
                     lip = get_lcp_by_host_sw_if_index(lcp, host_sw_if_index)
                     if lip:
@@ -215,7 +230,6 @@ def main():
     global args
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-disable-lcp', dest='disable_lcp', action='store_true', help="""Disable Linux Control Plane integration""")
     parser.add_argument('-a', dest='address', default="localhost:705", type=str, help="""Location of the SNMPd agent (unix-path or host:port), default localhost:705""")
     parser.add_argument('-p', dest='period', type=int, default=30, help="""Period to poll VPP, default 30 (seconds)""")
     parser.add_argument('-c', dest='config', type=str, help="""Optional YAML configuration file, default empty""")

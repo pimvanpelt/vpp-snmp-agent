@@ -26,8 +26,23 @@ def get_phy_by_sw_if_index(ifaces, sw_if_index):
 def get_lcp_by_host_sw_if_index(lcp, host_sw_if_index):
     try:
         for k,v in lcp.items():
-            if v['host_sw_if_index'] == host_sw_if_index:
+            if v.host_sw_if_index == host_sw_if_index:
                 return v
+    except:
+        pass
+    return None
+
+
+def get_description_by_ifname(config, ifname):
+    try:
+        for phy_name, phy in config['interfaces'].items():
+            if ifname == phy_name:
+                return phy['description']
+            if 'sub-interfaces' in phy:
+                for sub_id, sub_int in config['interfaces'][phy_name]['sub-interfaces'].items():
+                    sub_ifname = "%s.%d" % (phy_name, sub_id)
+                    if ifname == sub_ifname:
+                        return sub_int['description']
     except:
         pass
     return None
@@ -110,11 +125,10 @@ class MyAgent(agentx.Agent):
                     host_sw_if_index = ifaces[ifname].sw_if_index
                     lip = get_lcp_by_host_sw_if_index(lcp, host_sw_if_index)
                     if lip:
-                        phy = get_phy_by_sw_if_index(ifaces, lip['phy_sw_if_index'])
-                        self.logger.debug("LIP: %s PHY: %s" % (lip, phy))
+                        phy = get_phy_by_sw_if_index(ifaces, lip.phy_sw_if_index)
+                        ifName = lip.host_if_name
+                        self.logger.debug("Setting ifName of %s to '%s'" % (ifname, ifName))
                         if phy:
-                            ifName = self.config['interfaces'][phy.interface_name]['lcp']
-                            self.logger.debug("Setting ifName of %s to '%s'" % (ifname, ifName))
                             ifAlias = "LCP %s (%s)" % (phy.interface_name,ifname)
                             self.logger.debug("Setting ifAlias of %s to '%s'" % (ifname, ifAlias))
             except:
@@ -216,11 +230,14 @@ class MyAgent(agentx.Agent):
 
             if self.config and not ifAlias:
                 try:
-                    ifAlias = self.config['interfaces'][ifname]['description']
-                    self.logger.debug("Setting ifAlias of %s to '%s'" % (ifname, ifAlias))
+                    descr = get_description_by_ifname(self.config, ifname)
+                    if descr:
+                        self.logger.debug("Setting ifAlias of %s to config description '%s'" % (ifname, descr))
+                        ifAlias = descr
                 except:
                     pass
             if not ifAlias:
+                self.logger.debug("Setting ifAlias of %s to ifname %s" % (ifname, ifname))
                 ifAlias = ifname
             ds.set('1.3.6.1.2.1.31.1.1.1.18.%u' % (idx), 'str', ifAlias)
             ds.set('1.3.6.1.2.1.31.1.1.1.19.%u' % (idx), 'ticks', 0)  # Hardcode to Timeticks: (0) 0:00:00.00
@@ -232,7 +249,7 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-a', dest='address', default="localhost:705", type=str, help="""Location of the SNMPd agent (unix-path or host:port), default localhost:705""")
     parser.add_argument('-p', dest='period', type=int, default=30, help="""Period to poll VPP, default 30 (seconds)""")
-    parser.add_argument('-c', dest='config', type=str, help="""Optional YAML configuration file, default empty""")
+    parser.add_argument('-c', dest='config', type=str, help="""Optional vppcfg YAML configuration file, default empty""")
     parser.add_argument('-d', dest='debug', action='store_true', help="""Enable debug, default False""")
 
     args = parser.parse_args()

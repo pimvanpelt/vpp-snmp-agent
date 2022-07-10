@@ -36,7 +36,7 @@ optional arguments:
   -h, --help  show this help message and exit
   -a ADDRESS  Location of the SNMPd agent (unix-path or host:port), default localhost:705
   -p PERIOD   Period to poll VPP, default 30 (seconds)
-  -c CONFIG   Optional YAML configuration file, default empty
+  -c CONFIG   Optional vppcfg YAML configuration file, default empty
   -d          Enable debug, default False
 
 ## Install
@@ -45,32 +45,43 @@ sudo cp dist/vpp-snmp-agent /usr/sbin/
 
 ## Configuration file
 
-A simple convenience configfile can provide a mapping between VPP interface names, Linux Control Plane
-interface names, and descriptions. An example:
+This SNMP Agent will read a [vppcfg](https://github.com/pimvanpelt/vppcfg) configuration file,
+which provides a mapping between VPP interface names, Linux Control Plane interface names, and
+descriptions. From the upstream `vppcfg` configuration file, it will only consume the `interfaces`
+block, and ignore the rest. An example snippet:
 
 ```
 interfaces:
-  "TenGigabitEthernet6/0/0":
-    description: "Infra: xsw0.chrma0:2"
-    lcp: "xe1-0"
-  "TenGigabitEthernet6/0/0.3102":
-    description: "Infra: QinQ to L2 Provider"
-    lcp: "xe1-0.3102"
-  "TenGigabitEthernet6/0/0.310211":
-    description: "Cust: Customer IP Transit"
-    lcp: "xe1-0.3102.11"
+  GigabitEthernet3/0/0:
+    description: "Infra: Some interface"
+    lcp: e0
+    mtu: 9000
+    sub-interfaces:
+      100:
+        description: "Cust: Some sub-interface"
+      200:
+        description: "Cust: Some sub-interface with LCP"
+        lcp: e0.200
+      20011:
+        description: "Cust: Some QinQ sub-interface with LCP"
+        encapsulation:
+          dot1q: 200
+          inner-dot1q: 11
+          exact-match: true
+        lcp: e0.200.11
 ```
 
 This configuration file is completely optional. If the `-c` flag is empty, or it's set but the file does
 not exist, the Agent will simply enumerate all interfaces, and set the `ifAlias` OID to the same value as
 the `ifName`. However, if the config file is read, it will change the behavior as follows:
 
+*  The `ifAlias` OID for an interface will be set to the `description` field.
 *  Any `tapNN` interface names from VPP will be matched to their PHY by looking up their Linux Control Plane
-   interface. The `ifName` field will be rewritten to the _LIP_ `host-if`. For example, `tap3` above will
-   become `xe1-0` while `tap3.310211` will become `xe1-0.3102.11`.
-*  The `ifAlias` OID for a PHY will be set to the `description` field.
-*  The `ifAlias` OID for a TAP will be set to the string `LCP ` followed by its PHY `ifName`. For example,
-   `xe1-0.3102.11` will become `LCP TenGigabitEthernet6/0/0.310211 (tap9)`
+   interface:
+   *   The `ifName` field will be rewritten to the _LIP_ `host-if`, which is specified by the `lcp`
+       field. For example, `tap3` above will become `e0` while `tap3.20011` will become `e0.200.11`.
+   *   The `ifAlias` OID for a TAP will be set to the string `LCP ` followed by its PHY `ifName`. For example,
+       `e0.200.11` will become `LCP GigabitEthernet3/0/0.20011 (tap3)`
 
 ## SNMPd config
 

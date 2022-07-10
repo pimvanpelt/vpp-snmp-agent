@@ -33,16 +33,29 @@ def get_lcp_by_host_sw_if_index(lcp, host_sw_if_index):
     return None
 
 
-def get_description_by_ifname(config, ifname):
+def get_description_by_ifname(config, name):
     try:
-        for phy_name, phy in config['interfaces'].items():
-            if ifname == phy_name:
-                return phy['description']
-            if 'sub-interfaces' in phy:
-                for sub_id, sub_int in config['interfaces'][phy_name]['sub-interfaces'].items():
-                    sub_ifname = "%s.%d" % (phy_name, sub_id)
-                    if ifname == sub_ifname:
-                        return sub_int['description']
+        if 'interfaces' in config:
+            for ifname, iface in config['interfaces'].items():
+                if ifname == name:
+                    return iface['description']
+                if 'sub-interfaces' in iface:
+                    for sub_id, sub_iface in iface['sub-interfaces'].items():
+                        sub_ifname = "%s.%d" % (ifname, sub_id)
+                        if name == sub_ifname:
+                            return sub_iface['description']
+        if 'loopbacks' in config:
+            for ifname, iface in config['loopbacks'].items():
+                if ifname == name:
+                    return iface['description']
+        if 'taps' in config:
+            for ifname, iface in config['taps'].items():
+                if ifname == name:
+                    return iface['description']
+        if 'vxlan_tunnels' in config:
+            for ifname, iface in config['vxlan_tunnels'].items():
+                if ifname == name:
+                    return iface['description']
     except:
         pass
     return None

@@ -116,3 +116,18 @@ sudo systemctl start snmpd-dataplane
 sudo systemctl enable vpp-snmp-agent
 sudo systemctl start vpp-snmp-agent
 ```
+
+# Support
+
+Please use GitHub to file issues with the code, preferably
+with a full bug report that describes the problem, pointing
+at the code base where the problem occurred, and if possible
+propose a fix. 
+
+Requests that are not discussing problems with the software
+itself, notably enduser support requests, will not be handled
+unless they clearly demonstrate a bug and propose workarounds
+or fixes. 
+
+Paid support can be obtained on hourly commission. Reach out
+to IPng Networks (sales@ipng.ch) to discuss rates. 

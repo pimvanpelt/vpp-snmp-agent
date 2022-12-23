@@ -129,5 +129,9 @@ itself, notably enduser support requests, will not be handled
 unless they clearly demonstrate a bug and propose workarounds
 or fixes. 
 
+Incomplete or poorly articulated issues will be closed. Please
+see [this article](https://marker.io/blog/how-to-write-bug-report)
+for a good way to interact with the maintainers of this repo. 
+
 Paid support can be obtained on hourly commission. Reach out
 to IPng Networks (sales@ipng.ch) to discuss rates. 

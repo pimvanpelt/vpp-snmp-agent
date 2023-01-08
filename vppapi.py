@@ -3,7 +3,7 @@ The functions in this file interact with the VPP API to retrieve certain
 interface metadata.
 """
 
-from vpp_papi import VPPApiClient
+from vpp_papi import VPPApiClient, VPPApiJSONFiles
 import os
 import fnmatch
 import logging
@@ -30,19 +30,13 @@ class VPPApi:
         if self.connected:
             return True
 
-        vpp_json_dir = "/usr/share/vpp/api/"
-
-        # construct a list of all the json api files
-        jsonfiles = []
-        for root, dirnames, filenames in os.walk(vpp_json_dir):
-            for filename in fnmatch.filter(filenames, "*.api.json"):
-                jsonfiles.append(os.path.join(root, filename))
-
-        if not jsonfiles:
+        vpp_json_dir = VPPApiJSONFiles.find_api_dir([])
+        vpp_jsonfiles = VPPApiJSONFiles.find_api_files(api_dir=vpp_json_dir)
+        if not vpp_jsonfiles:
             logger.error("no json api files found")
             return False
 
-        self.vpp = VPPApiClient(apifiles=jsonfiles, server_address=self.address)
+        self.vpp = VPPApiClient(apifiles=vpp_jsonfiles, server_address=self.address)
         try:
             logger.info("Connecting to VPP")
             self.vpp.connect(self.clientname)

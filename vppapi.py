@@ -1,7 +1,7 @@
-'''
+"""
 The functions in this file interact with the VPP API to retrieve certain
 interface metadata.
-'''
+"""
 
 from vpp_papi import VPPApiClient
 import os
@@ -13,12 +13,14 @@ import socket
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
-logger = logging.getLogger('agentx.vppapi')
+
+
+logger = logging.getLogger("agentx.vppapi")
 logger.addHandler(NullHandler())
 
 
-class VPPApi():
-    def __init__(self, address='/run/vpp/api.sock', clientname='vppapi-client'):
+class VPPApi:
+    def __init__(self, address="/run/vpp/api.sock", clientname="vppapi-client"):
         self.address = address
         self.connected = False
         self.clientname = clientname
@@ -28,28 +30,27 @@ class VPPApi():
         if self.connected:
             return True
 
-        vpp_json_dir = '/usr/share/vpp/api/'
+        vpp_json_dir = "/usr/share/vpp/api/"
 
         # construct a list of all the json api files
         jsonfiles = []
         for root, dirnames, filenames in os.walk(vpp_json_dir):
-            for filename in fnmatch.filter(filenames, '*.api.json'):
+            for filename in fnmatch.filter(filenames, "*.api.json"):
                 jsonfiles.append(os.path.join(root, filename))
 
         if not jsonfiles:
-            logger.error('no json api files found')
+            logger.error("no json api files found")
             return False
 
-        self.vpp = VPPApiClient(apifiles=jsonfiles,
-                                server_address=self.address)
+        self.vpp = VPPApiClient(apifiles=jsonfiles, server_address=self.address)
         try:
-            logger.info('Connecting to VPP')
+            logger.info("Connecting to VPP")
             self.vpp.connect(self.clientname)
         except:
             return False
 
         v = self.vpp.api.show_version()
-        logger.info('VPP version is %s' % v.version)
+        logger.info("VPP version is %s" % v.version)
 
         self.connected = True
         return True

@@ -12,14 +12,15 @@ import agentx
 from agentx.dataset import DataSet
 from agentx.network import Network
 
+
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
 
 class Agent(object):
-    def __init__(self, server_address='/var/agentx/master', period=30.0):
-        self.logger = logging.getLogger('agentx.agent')
+    def __init__(self, server_address="/var/agentx/master", period=30.0):
+        self.logger = logging.getLogger("agentx.agent")
         self.logger.addHandler(NullHandler())
 
         self._servingset = DataSet()
@@ -27,7 +28,7 @@ class Agent(object):
         self._lastupdate = 0
         self._update_period = period  # Seconds
 
-        self._net = Network(server_address = server_address)
+        self._net = Network(server_address=server_address)
 
         self._oid_list = []
 
@@ -41,42 +42,43 @@ class Agent(object):
         return True
 
     def run(self):
-        self.logger.info('Calling setup')
+        self.logger.info("Calling setup")
         if not self.setup():
-            self.logger.error('Setup failed - exiting')
+            self.logger.error("Setup failed - exiting")
             return
 
-        self.logger.info('Initial update')
+        self.logger.info("Initial update")
         self._update()
 
         while True:
             if not self._net.is_connected():
-              self.logger.info('Opening AgentX connection')
-              self._net.start(self._oid_list)
+                self.logger.info("Opening AgentX connection")
+                self._net.start(self._oid_list)
 
             if time.time() - self._lastupdate > self._update_period:
                 if not self._update():
-                    self.logger.warning('Update failed, last successful update was %s' % self._lastupdate)
+                    self.logger.warning(
+                        "Update failed, last successful update was %s"
+                        % self._lastupdate
+                    )
                     time.sleep(1)
 
             try:
                 self._net.run()
             except Exception as e:
-                self.logger.error('An exception occurred: %s' % e)
-                self.logger.error('Reconnecting')
+                self.logger.error("An exception occurred: %s" % e)
+                self.logger.error("Reconnecting")
                 self._net.disconnect()
                 time.sleep(0.1)
 
     def stop(self):
-        self.logger.debug('Stopping')
+        self.logger.debug("Stopping")
         self._net.disconnect()
         pass
-
 
     def setup(self):
         # Override this
         pass
-
 
     def update(self):
         # Override this
@@ -88,5 +90,5 @@ class Agent(object):
 
         for oid in oid_list:
             if not oid in self._oid_list:
-                self.logger.debug('Adding %s to list' % oid)
+                self.logger.debug("Adding %s to list" % oid)
                 self._oid_list.append(oid)

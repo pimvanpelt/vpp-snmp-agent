@@ -19,7 +19,7 @@ class NullHandler(logging.Handler):
 
 
 class Agent(object):
-    def __init__(self, server_address="/var/agentx/master", period=30.0):
+    def __init__(self, server_address="/var/agentx/master", period=30.0, args=None):
         self.logger = logging.getLogger("agentx.agent")
         self.logger.addHandler(NullHandler())
 
@@ -31,6 +31,7 @@ class Agent(object):
         self._net = Network(server_address=server_address)
 
         self._oid_list = []
+        self._args = args
 
     def _update(self):
         ds = self.update()

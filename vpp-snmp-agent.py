@@ -64,29 +64,27 @@ def get_description_by_ifname(config, name):
 
 class MyAgent(agentx.Agent):
     def setup(self):
-        global vppstat, vpp, logger, args
-
         self.config = None
-        if args.config:
+        if self._args.config:
             try:
-                with open(args.config, "r") as f:
-                    self.logger.info("Loading configfile %s" % args.config)
+                with open(self._args.config, "r") as f:
+                    self.logger.info("Loading configfile %s" % self._args.config)
                     self.config = yaml.load(f, Loader=yaml.FullLoader)
                     self.logger.debug("Config: %s" % self.config)
             except:
-                self.logger.error("Couldn't read config from %s" % args.config)
+                self.logger.error("Couldn't read config from %s" % self._args.config)
 
         try:
             self.logger.info("Connecting to VPP Stats Segment")
-            vppstat = VPPStats(socketname="/run/vpp/stats.sock", timeout=2)
-            vppstat.connect()
+            self.vppstat = VPPStats(socketname="/run/vpp/stats.sock", timeout=2)
+            self.vppstat.connect()
         except:
             self.logger.error("Could not connect to VPPStats segment")
             return False
 
         try:
-            vpp = VPPApi(clientname="vpp-snmp-agent")
-            vpp.connect()
+            self.vpp = VPPApi(clientname="vpp-snmp-agent")
+            self.vpp.connect()
         except:
             self.logger.error("Could not connect to VPP API")
             return False
@@ -97,41 +95,33 @@ class MyAgent(agentx.Agent):
         return True
 
     def update(self):
-        global vppstat, vpp, args
-
         try:
-            vppstat.connect()
+            self.vppstat.connect()
         except:
             self.logger.error("Could not connect to VPPStats segment")
             return False
 
-        try:
-            vpp.connect()
-        except:
-            self.logger.error("Could not connect to VPP API")
-            return False
-
         ds = agentx.DataSet()
-        ifaces = vpp.get_ifaces()
-        lcp = vpp.get_lcp()
+        ifaces = self.vpp.get_ifaces()
+        lcp = self.vpp.get_lcp()
 
         num_ifaces = len(ifaces)
-        num_vppstat = len(vppstat["/if/names"])
+        num_vppstat = len(self.vppstat["/if/names"])
         num_lcp = len(lcp)
         self.logger.debug("LCP: %s" % (lcp))
         self.logger.debug(
-            "Retrieved Interfaces: vppapi=%d vppstats=%d lcp=%d"
+            "Retrieved Interfaces: vppapi=%d vppstat=%d lcp=%d"
             % (num_ifaces, num_vppstat, num_lcp)
         )
 
         if num_ifaces != num_vppstat:
             self.logger.warning(
-                "Interfaces count mismatch: vppapi=%d vppstats=%d"
+                "Interfaces count mismatch: vppapi=%d vppstat=%d"
                 % (num_ifaces, num_vppstat)
             )
 
-        for i in range(len(vppstat["/if/names"])):
-            ifname = vppstat["/if/names"][i]
+        for i in range(len(self.vppstat["/if/names"])):
+            ifname = self.vppstat["/if/names"][i]
             idx = 1000 + i
 
             ds.set("1.3.6.1.2.1.2.2.1.1.%u" % (idx), "int", idx)
@@ -217,117 +207,117 @@ class MyAgent(agentx.Agent):
             ds.set(
                 "1.3.6.1.2.1.2.2.1.10.%u" % (idx),
                 "u32",
-                vppstat["/if/rx"][:, i].sum_octets() % 2 ** 32,
+                self.vppstat["/if/rx"][:, i].sum_octets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.11.%u" % (idx),
                 "u32",
-                vppstat["/if/rx"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/rx"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.12.%u" % (idx),
                 "u32",
-                vppstat["/if/rx-multicast"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/rx-multicast"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.13.%u" % (idx),
                 "u32",
-                vppstat["/if/rx-no-buf"][:, i].sum() % 2 ** 32,
+                self.vppstat["/if/rx-no-buf"][:, i].sum() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.14.%u" % (idx),
                 "u32",
-                vppstat["/if/rx-error"][:, i].sum() % 2 ** 32,
+                self.vppstat["/if/rx-error"][:, i].sum() % 2 ** 32,
             )
 
             ds.set(
                 "1.3.6.1.2.1.2.2.1.16.%u" % (idx),
                 "u32",
-                vppstat["/if/tx"][:, i].sum_octets() % 2 ** 32,
+                self.vppstat["/if/tx"][:, i].sum_octets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.17.%u" % (idx),
                 "u32",
-                vppstat["/if/tx"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/tx"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.18.%u" % (idx),
                 "u32",
-                vppstat["/if/tx-multicast"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/tx-multicast"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.19.%u" % (idx),
                 "u32",
-                vppstat["/if/drops"][:, i].sum() % 2 ** 32,
+                self.vppstat["/if/drops"][:, i].sum() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.2.2.1.20.%u" % (idx),
                 "u32",
-                vppstat["/if/tx-error"][:, i].sum() % 2 ** 32,
+                self.vppstat["/if/tx-error"][:, i].sum() % 2 ** 32,
             )
 
             ds.set("1.3.6.1.2.1.31.1.1.1.1.%u" % (idx), "str", ifName)
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.2.%u" % (idx),
                 "u32",
-                vppstat["/if/rx-multicast"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/rx-multicast"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.3.%u" % (idx),
                 "u32",
-                vppstat["/if/rx-broadcast"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/rx-broadcast"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.4.%u" % (idx),
                 "u32",
-                vppstat["/if/tx-multicast"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/tx-multicast"][:, i].sum_packets() % 2 ** 32,
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.5.%u" % (idx),
                 "u32",
-                vppstat["/if/tx-broadcast"][:, i].sum_packets() % 2 ** 32,
+                self.vppstat["/if/tx-broadcast"][:, i].sum_packets() % 2 ** 32,
             )
 
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.6.%u" % (idx),
                 "u64",
-                vppstat["/if/rx"][:, i].sum_octets(),
+                self.vppstat["/if/rx"][:, i].sum_octets(),
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.7.%u" % (idx),
                 "u64",
-                vppstat["/if/rx"][:, i].sum_packets(),
+                self.vppstat["/if/rx"][:, i].sum_packets(),
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.8.%u" % (idx),
                 "u64",
-                vppstat["/if/rx-multicast"][:, i].sum_packets(),
+                self.vppstat["/if/rx-multicast"][:, i].sum_packets(),
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.9.%u" % (idx),
                 "u64",
-                vppstat["/if/rx-broadcast"][:, i].sum_packets(),
+                self.vppstat["/if/rx-broadcast"][:, i].sum_packets(),
             )
 
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.10.%u" % (idx),
                 "u64",
-                vppstat["/if/tx"][:, i].sum_octets(),
+                self.vppstat["/if/tx"][:, i].sum_octets(),
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.11.%u" % (idx),
                 "u64",
-                vppstat["/if/tx"][:, i].sum_packets(),
+                self.vppstat["/if/tx"][:, i].sum_packets(),
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.12.%u" % (idx),
                 "u64",
-                vppstat["/if/tx-multicast"][:, i].sum_packets(),
+                self.vppstat["/if/tx-multicast"][:, i].sum_packets(),
             )
             ds.set(
                 "1.3.6.1.2.1.31.1.1.1.13.%u" % (idx),
                 "u64",
-                vppstat["/if/tx-broadcast"][:, i].sum_packets(),
+                self.vppstat["/if/tx-broadcast"][:, i].sum_packets(),
             )
 
             speed = 0
@@ -370,8 +360,6 @@ class MyAgent(agentx.Agent):
 
 
 def main():
-    global args
-
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "-a",
@@ -404,7 +392,7 @@ def main():
     agentx.setup_logging(debug=args.debug)
 
     try:
-        a = MyAgent(server_address=args.address, period=args.period)
+        a = MyAgent(server_address=args.address, period=args.period, args=args)
         a.run()
     except Exception as e:
         print("Unhandled exception:", e)

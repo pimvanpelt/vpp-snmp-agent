@@ -108,7 +108,6 @@ class MyAgent(agentx.Agent):
         num_ifaces = len(ifaces)
         num_vppstat = len(self.vppstat["/if/names"])
         num_lcp = len(lcp)
-        self.logger.debug("LCP: %s" % (lcp))
         self.logger.debug(
             "Retrieved Interfaces: vppapi=%d vppstat=%d lcp=%d"
             % (num_ifaces, num_vppstat, num_lcp)

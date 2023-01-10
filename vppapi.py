@@ -78,6 +78,8 @@ class VPPApi:
         if not self.connected:
             return True
         self.vpp.disconnect()
+        self.iface_dict = None
+        self.lcp_dict = None
         self.connected = False
         return True
 

@@ -96,9 +96,14 @@ class MyAgent(agentx.Agent):
 
     def update(self):
         try:
+            self.vpp.connect()
+            r = self.vpp.vpp.api.control_ping()
+            self.logger.debug(f"VPP API: {r}")
             self.vppstat.connect()
-        except:
-            self.logger.error("Could not connect to VPPStats segment")
+        except Exception as e:
+            self.logger.error(f"VPP API: {e}, retrying")
+            self.vppstat.disconnect()
+            self.vpp.disconnect()
             return False
 
         ds = agentx.DataSet()

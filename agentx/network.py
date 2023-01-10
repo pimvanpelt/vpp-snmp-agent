@@ -27,11 +27,11 @@ class NetworkError(Exception):
 
 
 class Network:
-    def __init__(self, server_address="/var/agentx/master"):
+    def __init__(self, server_address="/var/agentx/master", debug=False):
 
         self.session_id = 0
         self.transaction_id = 0
-        self.debug = 1
+        self.debug = debug
         # Data Related Variables
         self.data = {}
         self.data_idx = []

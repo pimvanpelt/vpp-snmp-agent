@@ -28,7 +28,11 @@ class Agent(object):
         self._lastupdate = 0
         self._update_period = period  # Seconds
 
-        self._net = Network(server_address=server_address)
+        try:
+            debug = args.debug_agent
+        except:
+            debug = False
+        self._net = Network(server_address=server_address, debug=debug)
 
         self._oid_list = []
         self._args = args

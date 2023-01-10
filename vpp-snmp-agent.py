@@ -388,10 +388,16 @@ def main():
     parser.add_argument(
         "-d", dest="debug", action="store_true", help="""Enable debug, default False"""
     )
+    parser.add_argument(
+        "-dd",
+        dest="debug_agent",
+        action="store_true",
+        help="""Enable agentx debug, default False""",
+    )
 
     args = parser.parse_args()
     if args.debug:
-        print("Arguments:", args)
+        print(f"Arguments: {args}")
 
     agentx.setup_logging(debug=args.debug)
 

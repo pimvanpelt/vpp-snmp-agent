@@ -119,15 +119,14 @@ sudo systemctl start vpp-snmp-agent
 
 # Support
 
-Limnited support is offered on this codebase: GitHub issues can be filed for issues with the design or
-implementation (eg. bugs, feature requests), but no _user_ support can be given. Put simply, this repo
-accepts only bugreports with the code, not with its use. See the LICENSE for rationale.
+Limited support is offered on this codebase: GitHub issues may be filed for issues with the _design or
+implementation_ (eg. bugs, feature requests), but _user_ support can not be given. Put simply, this repo
+accepts only bugreports with the code, not with its use. See the LICENSE for clarity.
 
 Issues with the codebase that are well researched ([this article](https://marker.io/blog/how-to-write-bug-report)
 gives a good example of the expectation), preferably pointing at the location where the problem occurred,
 and if possible proposing a fix, are most welcome.
 
-Requests that are not discussing problems with the software itself, notably enduser support requests,
-will not be handled unless they clearly demonstrate a bug and propose workarounds or fixes. 
-
-Paid support can be obtained on hourly commission. Reach out to IPng Networks (sales@ipng.ch) to discuss rates. 
+Requests that don't discuss problems with the software itself, notably enduser support requests, will not be
+handled unless they clearly demonstrate a bug and propose workarounds or fixes. Paid support can be obtained
+on hourly commission. Reach out to IPng Networks GmbH (sales@ipng.ch) to discuss rates. 

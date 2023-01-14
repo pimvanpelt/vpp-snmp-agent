@@ -44,7 +44,6 @@ class Network:
             return
 
         try:
-            logger.info("Connecting to %s" % self._server_address)
             if self._server_address.startswith("/"):
                 self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.socket.connect(self._server_address)
@@ -55,9 +54,10 @@ class Network:
                 self.socket.connect((host, int(port)))
             self.socket.settimeout(self._timeout)
             self._connected = True
+            logger.info("Connected to %s" % self._server_address)
         except socket.error:
-            logger.error("Failed to connect to %s" % self._server_address)
             self._connected = False
+            logger.error("Failed to connect to %s" % self._server_address)
 
     def disconnect(self):
         if not self._connected:

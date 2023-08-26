@@ -88,8 +88,12 @@ the `ifName`. However, if the config file is read, it will change the behavior a
 
 ## SNMPd config
 
-First, configure the snmpd to accept agentx connections by adding (at least) the following
-to `snmpd.conf`:
+This agent is meant to run alongside the snmpd shipped in Debian (Bullseye or Bookworm), called
+[Net SNMP](http://net-snmp.sourceforge.net/). The same snmpd is available in Ubuntu (Focal, Jammy) as well,
+which should work.
+
+After installing the snmpd (`apt install snmpd`), configure it to accept agentx connections by adding (at least)
+the following to `snmpd.conf`:
 ```
 master  agentx
 agentXSocket tcp:localhost:705,unix:/var/agentx-dataplane/master

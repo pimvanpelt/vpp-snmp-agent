@@ -43,7 +43,10 @@ optional arguments:
 sudo cp dist/vpp-snmp-agent /usr/sbin/
 ```
 
-## Configuration file
+## Configuration
+
+This agent requires the `linux-cp` plugin to be enabled in VPP, and it requires read/write access
+to the VPP API and Stats sockets (typically in `/run/vpp/*.sock`).
 
 This SNMP Agent will read a [vppcfg](https://github.com/pimvanpelt/vppcfg) configuration file,
 which provides a mapping between VPP interface names, Linux Control Plane interface names, and
@@ -119,7 +122,11 @@ sudo systemctl start vpp-snmp-agent
 
 # Support
 
-Limited support is offered on this codebase: GitHub issues may be filed for issues with the _design or
+This software is compatible only with the current production release of VPP, which can be found on its
+[Gerrit](https://gerrit.fd.io/r/q/repo:vpp) service. Maintaining backwards compatibility is not a goal of
+this repository.
+
+Limited support is offered on the codebase: GitHub issues may be filed for issues with the _design or
 implementation_ (eg. bugs, feature requests), but _user_ support can not be given. Put simply, this repo
 accepts only bugreports with the code, not with its use. See the LICENSE for clarity.
 
